@@ -5,7 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -15,9 +16,32 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        // ]);
+         // Roles
+        Role::create(['name' => 'Cashier']);
+        Role::create(['name' => 'Finance']);
+        Role::create(['name' => 'Warehouse']);
+        Role::create(['name' => 'Purchasing']);
+        Role::create(['name' => 'Admin']);
+
+        // Permissions
+        Permission::create(['name' => 'create user']);
+        Permission::create(['name' => 'read user']);
+        Permission::create(['name' => 'update user']);
+        Permission::create(['name' => 'delete user']);
+
+        $adminRole  = Role::findByName('Admin');
+        $allPermissions = Permission::all();
+        $adminRole->givePermissionTo($allPermissions);
+
+        $cashierRole  = Role::findByName('Cashier');
+        $cashierRole->givePermissionTo('read user');
+
+        $financeRole  = Role::findByName('Finance');
+        $financeRole->givePermissionTo('delete user');
+
     }
 }
