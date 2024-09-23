@@ -16,15 +16,11 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
          // Roles
-        Role::create(['name' => 'Cashier']);
-        Role::create(['name' => 'Finance']);
-        Role::create(['name' => 'Warehouse']);
-        Role::create(['name' => 'Purchasing']);
         Role::create(['name' => 'Admin']);
 
         // Permissions
@@ -36,12 +32,6 @@ class DatabaseSeeder extends Seeder
         $adminRole  = Role::findByName('Admin');
         $allPermissions = Permission::all();
         $adminRole->givePermissionTo($allPermissions);
-
-        $cashierRole  = Role::findByName('Cashier');
-        $cashierRole->givePermissionTo('read user');
-
-        $financeRole  = Role::findByName('Finance');
-        $financeRole->givePermissionTo('delete user');
 
     }
 }
