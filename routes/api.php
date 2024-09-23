@@ -19,7 +19,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', function () {
         return User::all();
     });
-
     // Create user
     Route::post('/users', function (Request $request) {
         $request->validate([
