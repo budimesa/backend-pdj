@@ -21,17 +21,18 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
          // Roles
-        Role::create(['name' => 'Admin']);
-
-        // Permissions
-        Permission::create(['name' => 'create user']);
-        Permission::create(['name' => 'read user']);
-        Permission::create(['name' => 'update user']);
-        Permission::create(['name' => 'delete user']);
-
-        $adminRole  = Role::findByName('Admin');
-        $allPermissions = Permission::all();
-        $adminRole->givePermissionTo($allPermissions);
-
+         Role::create(['name' => 'Cashier']);
+         Role::create(['name' => 'Finance']);
+         Role::create(['name' => 'Warehouse']);
+         Role::create(['name' => 'Purchasing']);
+         Role::create(['name' => 'Admin']);
+         // Permissions
+         Permission::create(['name' => 'create user']);
+         Permission::create(['name' => 'read user']);
+         Permission::create(['name' => 'update user']);
+         Permission::create(['name' => 'delete user']);
+         $adminRole  = Role::findByName('Admin');
+         $allPermissions = Permission::all();
+         $adminRole->givePermissionTo($allPermissions);
     }
 }
