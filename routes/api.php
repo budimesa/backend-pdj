@@ -25,5 +25,5 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('warehouses', SupplierController::class);
+    Route::apiResource('warehouses', WarehouseController::class);
 });
