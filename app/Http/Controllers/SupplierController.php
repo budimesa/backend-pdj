@@ -18,7 +18,7 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'supplier_type' => 'required|in:reguler,non-reguler',
+            'supplier_type' => 'required|in:regular,non-regular',
             'supplier_code' => 'required|unique:suppliers,supplier_code',
             'supplier_name' => 'required',
             'phone_number' => 'nullable',
@@ -42,7 +42,7 @@ class SupplierController extends Controller
     public function update(Request $request, Supplier $supplier)
     {
         $validated = $request->validate([
-            'supplier_type' => 'required|in:reguler,non-reguler',
+            'supplier_type' => 'required|in:regular,non-regular',
             'supplier_code' => 'required|unique:suppliers,supplier_code,' . $supplier->id,
             'supplier_name' => 'required',
             'phone_number' => 'nullable',

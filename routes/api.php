@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WarehouseController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
@@ -21,4 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('suppliers', SupplierController::class);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('warehouses', SupplierController::class);
 });
