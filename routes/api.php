@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\ItemController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
@@ -26,4 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('warehouses', WarehouseController::class);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('items', ItemController::class);
 });
