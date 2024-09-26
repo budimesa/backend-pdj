@@ -11,6 +11,9 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\IncomingItemController;
+use App\Http\Controllers\IncomingItemDetailController;
+use App\Http\Controllers\BatchController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
@@ -31,4 +34,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('items', ItemController::class);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('incoming-items', IncomingItemController::class);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('incoming-item-details', IncomingItemDetailController::class);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('batches', BatchController::class);
 });

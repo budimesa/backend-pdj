@@ -35,6 +35,12 @@ class IncomingItemDetailController extends Controller
             'labor_cost' => 'nullable',
             'expiry_date' => 'required',
         ]);
+
+        $validated['created_by'] = Auth::id();
+
+        $incomingItemDetail = IncomingItemDetail::create($validated);
+
+        return response()->json($incomingItemDetail, 201);
     }
 
     /**
