@@ -13,7 +13,22 @@ class BatchController extends Controller
      */
     public function index()
     {
-        return Batch::all();
+        return Batch::orderBy('id', 'desc')->get();
+    }
+
+    public function fetchLatestRegularBatch($supplier_id) {
+        return Batch::orderBy('id', 'desc')->where('supplier_id', $supplier_id)->where('batch_code_type', 'regular')->first();
+    }
+
+
+    /**
+     * Get the latest non regular batch
+     *
+     * @return \App\Models\Batch
+     */
+    public function getNonRegularBatch() {
+        // return Batch::all();
+        return Batch::orderBy('id', 'desc')->where('batch_code_type', 'non-regular')->first();
     }
 
     /**

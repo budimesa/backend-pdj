@@ -46,4 +46,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('batches', BatchController::class);
+    Route::get('/batches-regular/{supplier_id}', [BatchController::class, 'fetchLatestRegularBatch']);
+    Route::get('/batches-non-regular', [BatchController::class, 'getNonRegularBatch']);
 });
