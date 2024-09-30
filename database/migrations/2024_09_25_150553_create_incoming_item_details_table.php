@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('incoming_item_details', function (Blueprint $table) {
+        Schema::create('inventories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('incoming_item_id')->constrained('incoming_items')->onDelete('cascade');
             $table->foreignId('item_id')->constrained('items')->onDelete('cascade');
@@ -19,9 +19,10 @@ return new class extends Migration
             $table->string('barcode_number');
             $table->decimal('gross_weight', 8, 2);
             $table->decimal('net_weight', 8, 2);
-            $table->decimal('storage_weight', 8, 2);
+            $table->decimal('actual_weight', 8, 2);
             $table->decimal('unit_price', 10, 2);
-            $table->integer('quantity');
+            $table->integer('available_stock');
+            $table->integer('actual_stock');
             $table->decimal('total_price', 10, 2);
             $table->decimal('labor_cost', 10, 2);
             $table->date('expiry_date')->nullable();
@@ -35,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('incoming_item_details');
+        Schema::dropIfExists('inventories');
     }
 };

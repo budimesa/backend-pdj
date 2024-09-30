@@ -24,7 +24,8 @@ class ItemController extends Controller
         $validated = $request->validate([
             'item_code' => 'required|unique:items,item_code',
             'item_name' => 'required',
-            'item_description' => 'nullable',
+            'notes' => 'nullable',
+            'sale_unit' => 'required|in:Dus,Keranjang,Karung,Plastik',
         ]);
 
         $validated['created_by'] = Auth::id();
@@ -50,7 +51,8 @@ class ItemController extends Controller
         $validated = $request->validate([
             'item_code' => 'required|unique:items,item_code,' . $item->id,
             'item_name' => 'required',
-            'item_description' => 'nullable',
+            'notes' => 'nullable',
+            'sale_unit' => 'required|in:Dus,Keranjang,Karung,Plastik',
         ]);
 
         $validated['updated_by'] = Auth::id();

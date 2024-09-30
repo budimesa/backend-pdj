@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('item_code')->unique();
             $table->string('item_name');
-            $table->string('item_description')->nullable();
+            $table->string('notes')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

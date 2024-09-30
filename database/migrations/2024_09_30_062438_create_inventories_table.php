@@ -16,16 +16,18 @@ return new class extends Migration
             $table->foreignId('incoming_item_id')->constrained('incoming_items')->onDelete('cascade');
             $table->foreignId('item_id')->constrained('items')->onDelete('cascade');
             $table->foreignId('batch_id')->constrained('batches')->onDelete('cascade');
+            $table->string('description');
             $table->string('barcode_number');
             $table->decimal('gross_weight', 8, 2);
             $table->decimal('net_weight', 8, 2);
-            $table->decimal('storage_weight', 8, 2);
-            $table->decimal('unit_price', 10, 2)->nullable(); // Harga per unit
-            $table->integer('quantity'); // Jumlah barang
-            $table->enum('transaction_type', ['in', 'out', 'repack']); // Menambahkan 'repack'
+            $table->decimal('actual_weight', 8, 2);
+            $table->decimal('unit_price', 10, 2);
+            $table->integer('available_stock');
+            $table->integer('actual_stock');
             $table->decimal('total_price', 10, 2);
             $table->decimal('labor_cost', 10, 2);
-            $table->date('expired_date');
+            $table->date('expiry_date')->nullable();
+            $table->string('notes')->nullable();
             $table->timestamps();
         });
     }

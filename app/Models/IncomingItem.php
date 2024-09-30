@@ -21,8 +21,13 @@ class IncomingItem extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
-    public function incomingItemDetails()
+    public function inventories()
     {
-        return $this->hasMany(IncomingItemDetail::class);
+        return $this->hasMany(Inventory::class);
     }
+
+    // public function incomingItemDetails()
+    // {
+    //     return $this->hasMany(IncomingItemDetail::class);
+    // }
 }
