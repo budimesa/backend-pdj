@@ -33,6 +33,7 @@ class IncomingItemController extends Controller
             'other_fee' => 'nullable',
             'total_cost' => 'required',
             'notes' => 'nullable',
+            'invoice_files' => 'nullable',
         ]);
 
         $validated['created_by'] = Auth::id();
@@ -67,6 +68,7 @@ class IncomingItemController extends Controller
             'other_fee' => 'nullable',
             'total_cost' => 'required',
             'notes' => 'nullable',
+            'invoice_files' => 'nullable',
         ]);
 
         $validated['updated_by'] = Auth::id();
