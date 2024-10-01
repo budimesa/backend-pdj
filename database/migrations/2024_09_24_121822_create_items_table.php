@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('item_code')->unique();
             $table->string('item_name');
             $table->string('notes')->nullable();
+            $table->enum('sale_unit', ['Dus', 'Keranjang', 'Karung', 'Plastik']);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

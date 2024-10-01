@@ -20,14 +20,15 @@ return new class extends Migration
             $table->string('barcode_number');
             $table->decimal('gross_weight', 8, 2);
             $table->decimal('net_weight', 8, 2);
-            $table->decimal('actual_weight', 8, 2);
             $table->decimal('unit_price', 10, 2);
+            $table->integer('initial_stock');
             $table->integer('available_stock');
             $table->integer('actual_stock');
             $table->decimal('total_price', 10, 2);
             $table->decimal('labor_cost', 10, 2);
             $table->date('expiry_date')->nullable();
             $table->string('notes')->nullable();
+            $table->string('transaction_type');
             $table->timestamps();
         });
     }

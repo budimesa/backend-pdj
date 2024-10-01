@@ -18,6 +18,13 @@ return new class extends Migration
             $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->date('shipment_date');
             $table->date('received_date');
+            $table->decimal('total_item_price', 10, 2);
+            $table->decimal('shipping_cost', 10, 2)->nullable();
+            $table->decimal('labor_cost', 10, 2)->nullable();
+            $table->decimal('other_fee', 10, 2)->nullable();
+            $table->decimal('total_cost', 10, 2);
+            $table->text('notes')->nullable();
+            $table->text('invoice_files')->nullable();
             $table->timestamps();
         });
     }

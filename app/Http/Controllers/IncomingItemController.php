@@ -27,6 +27,12 @@ class IncomingItemController extends Controller
             'warehouse_id' => 'required',
             'shipment_date' => 'required',
             'received_date' => 'required',
+            'total_item_price' => 'required',
+            'shipping_cost' => 'nullable',
+            'labor_cost' => 'nullable',
+            'other_fee' => 'nullable',
+            'total_cost' => 'required',
+            'notes' => 'nullable',
         ]);
 
         $validated['created_by'] = Auth::id();
@@ -55,6 +61,12 @@ class IncomingItemController extends Controller
             'warehouse_id' => 'required',
             'shipment_date' => 'required',
             'received_date' => 'required',
+            'total_item_price' => 'required',
+            'shipping_cost' => 'nullable',
+            'labor_cost' => 'nullable',
+            'other_fee' => 'nullable',
+            'total_cost' => 'required',
+            'notes' => 'nullable',
         ]);
 
         $validated['updated_by'] = Auth::id();
