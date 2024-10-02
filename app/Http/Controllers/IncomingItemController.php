@@ -16,6 +16,17 @@ class IncomingItemController extends Controller
         return IncomingItem::all();
     }
 
+    public function getLastItem()
+    {
+        $lastItem = IncomingItem::latest()->first();
+
+        if ($lastItem) {
+            return response()->json($lastItem, 200);
+        }
+
+        return response()->json(['message' => 'No items found'], 404);
+    }
+
     /**
      * Store a newly created resource in storage.
      */

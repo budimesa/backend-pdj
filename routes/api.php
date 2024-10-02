@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('incoming-items', IncomingItemController::class);
+    Route::get('incoming-item-last-row', [IncomingItemController::class, 'getLastItem']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
