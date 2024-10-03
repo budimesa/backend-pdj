@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\IncomingItem;
 use App\Models\Inventory;
+use App\Models\Supplier;
+use App\Models\Batch;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 class IncomingItemController extends Controller
 {
@@ -40,7 +43,6 @@ class IncomingItemController extends Controller
         $request->validate([
             'incoming_item_code' => 'required|unique:incoming_items,incoming_item_code',
             'supplier_id' => 'required',
-            'warehouse_id' => 'required',
             'shipment_date' => 'required',
             'received_date' => 'required',
             'total_item_price' => 'required',
@@ -51,9 +53,8 @@ class IncomingItemController extends Controller
             'notes' => 'nullable',
             'invoice_files' => 'nullable',
             'details' => 'required|array',
-            'details.*.item_id' => 'required|string',
+            'details.*.item_id' => 'required',
             // 'details.*.batch_id' => 'required|string',
-            'details.*.barcode_number' => 'required|numeric',
             'details.*.gross_weight' => 'required|numeric',
             'details.*.net_weight' => 'required|numeric',
             'details.*.unit_price' => 'required|numeric',
@@ -67,13 +68,14 @@ class IncomingItemController extends Controller
 
         // Mulai transaction
         DB::transaction(function () use ($request) {
-            // Insert ke tabel mst_bom_formula
+            $shipmentDate = Carbon::parse($request->shipment_date)->format('Y-m-d H:i:s');
+            $receivedDate = Carbon::parse($request->received_date)->format('Y-m-d H:i:s');
             $incomingItem = IncomingItem::create([
                 'incoming_item_code' => $request->incoming_item_code,
                 'supplier_id' => $request->supplier_id,
-                'warehouse_id' => $request->warehouse_id,
-                'shipment_date' => $request->shipment_date,
-                'received_date' => $request->received_date,
+                'warehouse_id' => 1, // Gudang Sementara (Toko)
+                'shipment_date' => $shipmentDate,
+                'received_date' => $receivedDate,                
                 'total_item_price' => $request->total_item_price,
                 'shipping_cost' => $request->shipping_cost,
                 'labor_cost' => $request->labor_cost,
@@ -90,18 +92,20 @@ class IncomingItemController extends Controller
                 $batchCode = $batchController->generateBatchCode($request->supplier_id);
                 
                 // Menyimpan batch baru dan mendapatkan batch_id
+                $supplier = Supplier::find($request->supplier_id);
                 $batch = Batch::create([
                     'batch_code' => $batchCode,
                     'supplier_id' => $request->supplier_id,
-                    'batch_code_type' => 'incoming', // Atur sesuai dengan kebutuhan
+                    'batch_code_type' => $supplier->supplier_type, // Atur sesuai dengan kebutuhan
                 ]);
                 
                 $barcodeNumber = $this->generateBarcodeNumber();
                 Inventory::create([
                     'incoming_item_id' => $incomingItem->id,
                     'item_id' => $detail['item_id'],
-                    'batch_id' => $detail['batch_id'],
+                    'batch_id' => $batch->id,
                     'barcode_number' => $barcodeNumber,
+                    'description' => $detail['description'],
                     'gross_weight' => $detail['gross_weight'],
                     'net_weight' => $detail['net_weight'],
                     'unit_price' => $detail['unit_price'],
@@ -110,7 +114,7 @@ class IncomingItemController extends Controller
                     'actual_stock' => $detail['actual_stock'],
                     'total_price' => $detail['total_price'],
                     'labor_cost' => $detail['labor_cost'],
-                    'notes' => $detail['notes'],
+                    'notes' => '',
                     // 'expiry_date' => $detail['expiry_date'],
                     'transaction_type' => 'incoming',
                     'created_by' => Auth::id(),

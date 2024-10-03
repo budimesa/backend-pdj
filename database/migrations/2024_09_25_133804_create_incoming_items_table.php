@@ -25,7 +25,9 @@ return new class extends Migration
             $table->decimal('total_cost', 10, 2);
             $table->text('notes')->nullable();
             $table->text('invoice_files')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
+            $table->unsignedBigInteger('updated_by')->nullable();
         });
     }
 

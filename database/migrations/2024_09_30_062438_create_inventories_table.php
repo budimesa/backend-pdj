@@ -29,7 +29,9 @@ return new class extends Migration
             $table->date('expiry_date')->nullable();
             $table->string('notes')->nullable();
             $table->string('transaction_type');
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
+            $table->unsignedBigInteger('updated_by')->nullable();
         });
     }
 

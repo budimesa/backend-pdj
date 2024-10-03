@@ -53,7 +53,6 @@ class BatchController extends Controller
                                 ->first();
         } else {
             $batchCodePrefix = substr($supplier->supplier_code, 0, 3);
-            
             // Ambil counter terakhir untuk regular berdasarkan supplier_id
             $latestBatch = Batch::where('supplier_id', $supplier_id)
                                 ->where('batch_code_type', 'regular')
