@@ -31,6 +31,11 @@ class IncomingItemController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
+    private function generateBarcodeNumber() {
+        // Menghasilkan 12 digit nomor acak
+        return str_pad(mt_rand(1, 999999999999), 12, '0', STR_PAD_LEFT);
+    }
     public function store(Request $request) {
         $request->validate([
             'incoming_item_code' => 'required|unique:incoming_items,incoming_item_code',
@@ -80,20 +85,34 @@ class IncomingItemController extends Controller
             ]);
             
             foreach ($request->details as $detail) {
+                
+                $batchController = new BatchController();
+                $batchCode = $batchController->generateBatchCode($request->supplier_id);
+                
+                // Menyimpan batch baru dan mendapatkan batch_id
+                $batch = Batch::create([
+                    'batch_code' => $batchCode,
+                    'supplier_id' => $request->supplier_id,
+                    'batch_code_type' => 'incoming', // Atur sesuai dengan kebutuhan
+                ]);
+                
+                $barcodeNumber = $this->generateBarcodeNumber();
                 Inventory::create([
                     'incoming_item_id' => $incomingItem->id,
                     'item_id' => $detail['item_id'],
-                    // 'batch_id' => $detail['batch_id'],
-                    'barcode_number' => $detail['barcode_number'],
+                    'batch_id' => $detail['batch_id'],
+                    'barcode_number' => $barcodeNumber,
                     'gross_weight' => $detail['gross_weight'],
                     'net_weight' => $detail['net_weight'],
                     'unit_price' => $detail['unit_price'],
+                    'initial_stock' => $detail['actual_stock'],
+                    'available_stock' => $detail['actual_stock'],
                     'actual_stock' => $detail['actual_stock'],
                     'total_price' => $detail['total_price'],
                     'labor_cost' => $detail['labor_cost'],
                     'notes' => $detail['notes'],
                     // 'expiry_date' => $detail['expiry_date'],
-                    'transaction_type' => $detail['transaction_type'],
+                    'transaction_type' => 'incoming',
                     'created_by' => Auth::id(),
                 ]);
             }
