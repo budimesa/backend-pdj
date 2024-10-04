@@ -35,18 +35,18 @@ class BatchController extends Controller
     public function generateBatchCode($supplier_id) {
         // Ambil supplier berdasarkan ID
         $supplier = Supplier::find($supplier_id);
-
+    
         if (!$supplier) {
             return response()->json(['message' => 'Supplier not found'], 404);
         }
-
+    
         $year = date('y'); // Ambil tahun dua digit
         $monthLetter = $this->getMonthLetter(date('n')); // Ambil huruf untuk bulan saat ini
         $batchCodePrefix = '';
-
+    
         if ($supplier->supplier_type === 'non-regular') {
             $batchCodePrefix = 'KPK';
-            
+    
             // Ambil counter terakhir untuk non-regular tanpa memeriksa supplier_id
             $latestBatch = Batch::where('batch_code_type', 'non-regular')
                                 ->orderBy('id', 'desc')
@@ -59,14 +59,25 @@ class BatchController extends Controller
                                 ->orderBy('id', 'desc')
                                 ->first();
         }
-
+    
         $counter = 1; // Default counter
+    
         if ($latestBatch) {
-            // Ambil counter dari batch terakhir
-            preg_match('/(\d+)$/', $latestBatch->batch_code, $matches);
-            $counter = isset($matches[1]) ? intval($matches[1]) + 1 : $counter;
+            // Ambil counter dan bulan dari batch terakhir
+            preg_match('/(\d+)([A-Z])/', $latestBatch->batch_code, $matches);
+    
+            // Cek jika bulan pada batch terakhir berbeda dengan bulan sekarang
+            $lastBatchMonthLetter = isset($matches[2]) ? $matches[2] : '';
+            
+            if ($lastBatchMonthLetter !== $monthLetter) {
+                // Reset counter jika bulan tidak sama
+                $counter = 1;
+            } else {
+                // Ambil counter dari batch terakhir
+                $counter = isset($matches[1]) ? intval($matches[1]) + 1 : $counter;
+            }
         }
-
+    
         // Format batch_code
         $batchCode = sprintf('%s %s%s %04d', $batchCodePrefix, $year, $monthLetter, $counter);
         
