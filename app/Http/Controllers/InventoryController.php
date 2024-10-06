@@ -17,6 +17,7 @@ class InventoryController extends Controller
         // Apply global filter
         if ($request->has('filters.global.value')) {
             $query->where('description', 'like', '%' . $request->input('filters.global.value') . '%')
+                ->orWhere('batch_code', 'like', '%' . $request->input('filters.global.value') . '%')
                 ->orWhere('notes', 'like', '%' . $request->input('filters.global.value') . '%');
         }
 
@@ -25,12 +26,18 @@ class InventoryController extends Controller
             $query->where('description', 'like', $request->input('filters.description.value') . '%');
         }
 
+        if ($request->has('filters.batch_code.value')) {
+            $query->where('batch_code', 'like', $request->input('filters.batch_code.value') . '%');
+        }
+
         if ($request->has('filters.notes.value')) {
             $query->where('notes', 'like', $request->input('filters.notes.value') . '%');
         }
 
         $query->with('incomingItem');
-        $query->with('creator');
+        $query->with('item');
+        $query->with('batch');
+        $query->with('warehouse');
         $query->orderBy('created_at', 'desc'); 
         $perPage = $request->input('per_page', 10);
         $page = $request->input('page', 1);
@@ -41,13 +48,25 @@ class InventoryController extends Controller
             return [
                 'id' => $item->id,
                 'incoming_item_code' => $item->incomingItem ? $item->incomingItem->incoming_item_code : null,
-                'supplier_name' => $item->supplier ? $item->supplier->supplier_name : null,
+                'concat_code_name' => $item->item->item_code . ' - ' . $item->item->item_name,
+                'batch_code' => $item->batch ? $item->batch->batch_code : null,
+                'warehouse_name' => $item->warehouse ? $item->warehouse->warehouse_name : null,
                 'description' => $item->description,
+                'barcode' => $item->barcode,
+                'gross_weight' => $item->gross_weight,
+                'net_weight' => $item->net_weight,
+                'unit_price' => $item->unit_price,
+                'initial_stock' => $item->initial_stock,
+                'available_stock' => $item->available_stock,
+                'actual_stock' => $item->actual_stock,
+                'total_price' => $item->total_price,
+                'labor_cost' => $item->labor_cost,
+                'expiry_date' => $item->expiry_date,
+                'transaction_type' => $item->transaction_type,
+                'price_status' => $item->price_status,
                 'notes' => $item->notes,
-                'creator' => $item->creator ? $item->creator->name : null,
                 'created_at' => $item->created_at,
                 'updated_at' => $item->updated_at,
-                // 'invoice_files' => $item->invoice_files,
             ];
         });
 

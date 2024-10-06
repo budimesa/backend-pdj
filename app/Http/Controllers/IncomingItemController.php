@@ -232,7 +232,7 @@ class IncomingItemController extends Controller
                 'updated_by' => $inventory->updated_by,
                 'created_at' => $inventory->created_at,
                 'updated_at' => $inventory->updated_at,
-                'name' => $inventory->item->item_code . ' - ' . $inventory->item->item_name,
+                'concat_code_name' => $inventory->item->item_code . ' - ' . $inventory->item->item_name,
             ];
         });
 
