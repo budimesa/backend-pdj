@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('incoming_item_id')->constrained('incoming_items')->onDelete('cascade');
             $table->foreignId('item_id')->constrained('items')->onDelete('cascade');
             $table->foreignId('batch_id')->constrained('batches')->onDelete('cascade');
+            $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->string('description');
             $table->string('barcode_number');
             $table->decimal('gross_weight', 8, 2);
@@ -28,7 +29,8 @@ return new class extends Migration
             $table->decimal('labor_cost', 10, 2);
             $table->date('expiry_date')->nullable();
             $table->string('notes')->nullable();
-            $table->string('transaction_type');
+            $table->tinyInteger('transaction_type')->unsigned()->default(1);
+            $table->tinyInteger('price_status')->unsigned()->default(1);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->unsignedBigInteger('updated_by')->nullable();

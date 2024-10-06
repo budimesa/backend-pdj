@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('incoming_item_code')->unique();
             $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
-            $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->date('shipment_date');
             $table->date('received_date');
             $table->decimal('total_item_price', 10, 2);

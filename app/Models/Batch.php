@@ -11,11 +11,6 @@ class Batch extends Model
 
     protected $guarded = [];
 
-    // public function incomingItemDetails()
-    // {
-    //     return $this->hasMany(IncomingItemDetail::class);
-    // }
-
     public function inventories()
     {
         return $this->hasMany(Inventory::class);

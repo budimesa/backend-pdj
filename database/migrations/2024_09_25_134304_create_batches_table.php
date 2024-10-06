@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('batch_code')->unique();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('cascade');
+            $table->foreignId('incoming_item_id')->constrained('incoming_items')->onDelete('cascade');
+            $table->foreignId('item_id')->constrained('items')->onDelete('cascade');
             $table->enum('batch_code_type', ['regular', 'non-regular']); 
             $table->timestamps();
         });
