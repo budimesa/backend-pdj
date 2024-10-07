@@ -11,18 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customer_credit_limits', function (Blueprint $table) {
+        Schema::create('customer_credit_limit_payments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('customer_id');
-            $table->decimal('limit_amount', 15, 2)->nullable(); // Dapat bernilai null jika is_unlimited true
-            $table->decimal('limit_used', 15, 2)->default(0); // Field untuk limit yang telah terpakai
-            $table->boolean('is_unlimited')->default(false); // Field untuk status unlimited
+            $table->unsignedBigInteger('customer_credit_limit_id');
+            $table->decimal('amount_paid', 15, 2);
+            $table->timestamp('payment_date');
+            $table->string('description')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
 
             // Menambahkan foreign key constraint
-            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+            $table->foreign('customer_credit_limit_id')->references('id')->on('customer_credit_limits')->onDelete('cascade');
         });
     }
 
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('customer_credit_limits');
+        Schema::dropIfExists('customer_credit_limit_payments');
     }
 };

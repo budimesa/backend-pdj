@@ -11,6 +11,11 @@ class CustomerCreditLimit extends Model
 
     protected $guarded = [];
 
+    public function details()
+    {
+        return $this->hasMany(CustomerCreditLimitDetail::class);
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
