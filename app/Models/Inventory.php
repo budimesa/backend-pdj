@@ -9,8 +9,6 @@ class Inventory extends Model
 {
     use HasFactory;
 
-    use HasFactory;
-
     protected $guarded = [];
 
     public function incomingItem()

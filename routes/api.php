@@ -14,6 +14,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\IncomingItemController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\CustomerController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
@@ -47,4 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('inventories', InventoryController::class);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('customers', CustomerController::class);
 });
