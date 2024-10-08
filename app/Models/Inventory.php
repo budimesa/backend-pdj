@@ -30,4 +30,9 @@ class Inventory extends Model
     {
         return $this->belongsTo(Warehouse::class);
     }
+
+    public function itemTransfer()
+    {
+        return $this->belongsTo(ItemTransfer::class);
+    }
 }

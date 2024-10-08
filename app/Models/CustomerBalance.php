@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CustomerCreditLimit extends Model
+class CustomerBalance extends Model
 {
     use HasFactory;
 
@@ -13,7 +13,7 @@ class CustomerCreditLimit extends Model
 
     public function details()
     {
-        return $this->hasMany(CustomerCreditLimitDetail::class);
+        return $this->hasMany(CustomerBalanceDetail::class);
     }
 
     public function customer()
@@ -21,8 +21,8 @@ class CustomerCreditLimit extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function payments()
+    public function deposits()
     {
-        return $this->hasMany(CustomerCreditLimitPayment::class);
+        return $this->hasMany(CustomerBalanceDeposit::class);
     }
 }

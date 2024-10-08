@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CustomerCreditLimitPayment extends Model
+class CustomerBalanceDetail extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
 
-    public function customerCreditLimit()
+    public function customerBalance()
     {
-        return $this->belongsTo(CustomerCreditLimit::class);
+        return $this->belongsTo(CustomerBalance::class);
     }
 }
