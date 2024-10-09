@@ -29,6 +29,10 @@ class CustomerCreditLimitController extends Controller
             'is_unlimited' => 'required|boolean',
         ]);
 
+        if(!$validated['is_unlimited']) { 
+            $validated['limit_remaining'] = $validated['limit_amount'];
+        }
+
         $validated['created_by'] = Auth::id();
 
         $creditLimit = CustomerCreditLimit::create($validated);
@@ -47,7 +51,7 @@ class CustomerCreditLimitController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CustomerCreditLimit $creditLimit)
+    public function update(Request $request, CustomerCreditLimit $customerCreditLimit)
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
@@ -57,11 +61,15 @@ class CustomerCreditLimitController extends Controller
             'is_unlimited' => 'required|boolean',
         ]);
 
+        if(!$validated['is_unlimited']) { 
+            $validated['limit_remaining'] = $validated['limit_amount'];
+        }
+
         $validated['updated_by'] = Auth::id();
 
-        $creditLimit->update($validated);
+        $customerCreditLimit->update($validated);
 
-        return response()->json($creditLimit, 200);
+        return response()->json($customerCreditLimit, 200);
     }
 
     /**

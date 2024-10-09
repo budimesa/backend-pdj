@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('customer_id');
             $table->decimal('limit_amount', 15, 2)->nullable(); // Dapat bernilai null jika is_unlimited true
             $table->decimal('limit_used', 15, 2)->default(0); // Field untuk limit yang telah terpakai
+            $table->decimal('limit_remaining', 15, 2)->nullable(); // Field untuk limit yang tersisa
             $table->boolean('is_unlimited')->default(false); // Field untuk status unlimited
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
