@@ -16,6 +16,7 @@ use App\Http\Controllers\BatchController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerCreditLimitController;
+use App\Http\Controllers\CustomerBalanceController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
@@ -59,3 +60,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('customer-credit-limits', CustomerCreditLimitController::class);    
 });
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('customer-balances', CustomerBalanceController::class);    
+});
