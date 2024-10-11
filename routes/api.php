@@ -63,3 +63,5 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('customer-balances', CustomerBalanceController::class);    
 });
+
+// Route::get('fetch-merged-raw-wfg', [RawMaterialController::class, 'getMergedRawAndWFG']);
