@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('item_transfers', function (Blueprint $table) {
             $table->id();
             $table->string('transfer_code')->unique(); // Kode transfer
+            $table->timestamp('transfer_date');
             $table->foreignId('from_warehouse_id')->constrained('warehouses'); // ID gudang asal
             $table->foreignId('to_warehouse_id')->constrained('warehouses'); // ID gudang tujuan
             $table->integer('total_quantity'); // Total jumlah barang
             $table->decimal('total_price', 15, 2); // Total harga barang
+            $table->tinyInteger('transfer_status')->unsigned()->default(1);
+            $table->text('notes')->nullable();
             $table->timestamps(); // Tanggal dibuat dan diperbarui
         });
     }

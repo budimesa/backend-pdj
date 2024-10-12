@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\CustomerBalance;
+use App\Models\CustomerBalanceDeposit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class CustomerBalanceController extends Controller
 {
@@ -19,19 +21,61 @@ class CustomerBalanceController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id', // Pastikan customer ada
-            'balance_amount' => 'nullable|numeric',
-        ]);
 
-        $validated['created_by'] = Auth::id();
-
-        $customerBalance = CustomerBalance::create($validated);
-
-        return response()->json($customerBalance, 201);
+     public function store(Request $request) 
+     {
+         $validated = $request->validate([
+             'customer_id' => 'required|exists:customers,id',
+             'deposit_amount' => 'nullable|numeric',
+             'deposit_date' => 'required|date', // Validate deposit date
+         ]);
+     
+         $validated['created_by'] = Auth::id();
+     
+         // Convert deposit_date to a compatible format
+         $validated['deposit_date'] = Carbon::parse($validated['deposit_date'])->toDateTimeString();
+     
+         // Check if a customer balance record exists for the given customer_id
+         $customerBalance = CustomerBalance::where('customer_id', $validated['customer_id'])->first();
+     
+         if ($customerBalance) {
+             // Update the existing balance
+             $customerBalance->balance_amount += $validated['deposit_amount'];
+             $customerBalance->updated_by = Auth::id();
+             $customerBalance->save();
+         } else {
+             // Create a new customer balance record
+             $customerBalance = CustomerBalance::create([
+                 'customer_id' => $validated['customer_id'],
+                 'balance_amount' => $validated['deposit_amount'],
+                 'created_by' => Auth::id(),
+             ]);
+         }
+     
+         // Insert a new deposit record
+         CustomerBalanceDeposit::create([
+             'customer_balance_id' => $customerBalance->id,
+             'deposit_amount' => $validated['deposit_amount'],
+             'deposit_date' => $validated['deposit_date'], // Use the formatted date
+             'created_by' => Auth::id(),
+         ]);
+     
+         return response()->json($customerBalance, 201);
     }
+     
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'customer_id' => 'required|exists:customers,id', // Pastikan customer ada
+    //         'balance_amount' => 'nullable|numeric',
+    //     ]);
+
+    //     $validated['created_by'] = Auth::id();
+
+    //     $customerBalance = CustomerBalance::create($validated);
+
+    //     return response()->json($customerBalance, 201);
+    // }
 
     /**
      * Display the specified resource.

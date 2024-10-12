@@ -9,9 +9,6 @@ class IncomingItem extends Model
 {
     use HasFactory;
 
-    // price_status 0 = pending, 1 = confirmed
-    // transaction_type = 0 non-repack, 1 = repack
-
     protected $guarded = [];
 
     public function creator()

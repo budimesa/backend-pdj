@@ -107,7 +107,6 @@ class IncomingItemController extends Controller
             'invoice_files' => 'nullable',
             'details' => 'required|array',
             'details.*.item_id' => 'required',
-            // 'details.*.batch_id' => 'required|string',
             'details.*.gross_weight' => 'required|numeric',
             'details.*.net_weight' => 'required|numeric',
             'details.*.unit_price' => 'required|numeric',

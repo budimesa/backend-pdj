@@ -15,4 +15,14 @@ class Warehouse extends Model
     {
         return $this->hasMany(Inventory::class);
     }
+
+    public function itemTransfersFrom()
+    {
+        return $this->hasMany(ItemTransfer::class, 'from_warehouse_id');
+    }
+
+    public function itemTransfersTo()
+    {
+        return $this->hasMany(ItemTransfer::class, 'to_warehouse_id');
+    }
 }
