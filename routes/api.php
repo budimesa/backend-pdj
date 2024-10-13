@@ -17,6 +17,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerCreditLimitController;
 use App\Http\Controllers\CustomerBalanceController;
+use App\Http\Controllers\ItemTransferController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
@@ -62,6 +63,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('customer-balances', CustomerBalanceController::class);    
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('item-transfers', ItemTransferController::class);
+    Route::get('item-transfer-last-row', [ItemTransferController::class, 'getLastItem']);
 });
 
 // Route::get('fetch-merged-raw-wfg', [RawMaterialController::class, 'getMergedRawAndWFG']);

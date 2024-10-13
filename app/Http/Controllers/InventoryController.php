@@ -46,13 +46,18 @@ class InventoryController extends Controller
 
         $data = collect($results->items())->map(function ($item) {
             return [
-                'id' => $item->id,
+                'inventory_id' => $item->id,
+                'item_id' => $item->item ? $item->item->id : null,
+                'incoming_item_id' => $item->incomingItem ? $item->incomingItem->id : null,
                 'incoming_item_code' => $item->incomingItem ? $item->incomingItem->incoming_item_code : null,
                 'concat_code_name' => $item->item->item_code . ' - ' . $item->item->item_name,
+                'concat_inventory' => '[ ' . $item->incomingItem->incoming_item_code . ' ] - [ ' . $item->batch->batch_code . ' ] - [ ' . 
+                $item->item->item_code . ' - ' . $item->item->item_name . ' @' . $item->net_weight . ' KG ] ' . ' ( ' . $item->actual_stock . ' Dus )',
+                'batch_id' => $item->batch ? $item->batch->id: null,
                 'batch_code' => $item->batch ? $item->batch->batch_code : null,
                 'warehouse_name' => $item->warehouse ? $item->warehouse->warehouse_name : null,
                 'description' => $item->description,
-                'barcode' => $item->barcode,
+                'barcode_number' => $item->barcode_number,
                 'gross_weight' => $item->gross_weight,
                 'net_weight' => $item->net_weight,
                 'unit_price' => $item->unit_price,

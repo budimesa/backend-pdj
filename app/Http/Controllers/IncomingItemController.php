@@ -204,7 +204,7 @@ class IncomingItemController extends Controller
     public function show(IncomingItem $incomingItem)
     {
         // Eager load inventories and their related items
-        $incomingItem->load(['inventories.item']);
+        $incomingItem->load(['inventories.item', 'inventories.batch']);
 
         // Map through inventories to concatenate item_code and item_name
         $details = $incomingItem->inventories->map(function ($inventory) {
@@ -213,6 +213,7 @@ class IncomingItemController extends Controller
                 'incoming_item_id' => $inventory->incoming_item_id,
                 'item_id' => $inventory->item_id,
                 'batch_id' => $inventory->batch_id,
+                'batch_code' => $inventory->batch->batch_code,
                 'description' => $inventory->description,
                 'barcode_number' => $inventory->barcode_number,
                 'gross_weight' => $inventory->gross_weight,
@@ -244,6 +245,113 @@ class IncomingItemController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // public function update(Request $request, $id)
+    // {
+    //     $request->validate([
+    //         'incoming_item_code' => 'required|unique:incoming_items,incoming_item_code,' . $id,
+    //         'supplier_id' => 'required',
+    //         'shipment_date' => 'required',
+    //         'received_date' => 'required',
+    //         'total_item_price' => 'required',
+    //         'shipping_cost' => 'nullable',
+    //         'labor_cost' => 'nullable',
+    //         'other_fee' => 'nullable',
+    //         'total_cost' => 'required',
+    //         'notes' => 'nullable',
+    //         'invoice_files' => 'nullable',
+    //         'details' => 'required|array',
+    //         'details.*.item_id' => 'required',
+    //         'details.*.gross_weight' => 'required|numeric',
+    //         'details.*.net_weight' => 'required|numeric',
+    //         'details.*.unit_price' => 'required|numeric',
+    //         'details.*.initial_stock' => 'required|numeric',
+    //         'details.*.total_price' => 'required|numeric',
+    //         'details.*.labor_cost' => 'required|numeric',
+    //         'details.*.notes' => 'nullable|string',
+    //         'details.*.expiry_date' => 'nullable|date',
+    //     ]);
+    
+    //     // Mulai transaction untuk update
+    //     DB::transaction(function () use ($request, $id) {
+    //         $shipmentDate = Carbon::parse($request->shipment_date)->format('Y-m-d H:i:s');
+    //         $receivedDate = Carbon::parse($request->received_date)->format('Y-m-d H:i:s');
+    
+    //         // Update IncomingItem
+    //         $incomingItem = IncomingItem::findOrFail($id);
+    //         $incomingItem->update([
+    //             'incoming_item_code' => $request->incoming_item_code,
+    //             'supplier_id' => $request->supplier_id,
+    //             'shipment_date' => $shipmentDate,
+    //             'received_date' => $receivedDate,                
+    //             'total_item_price' => $request->total_item_price,
+    //             'shipping_cost' => $request->shipping_cost,
+    //             'labor_cost' => $request->labor_cost,
+    //             'other_fee' => $request->other_fee,
+    //             'total_cost' => $request->total_cost,
+    //             'notes' => $request->notes,
+    //             'invoice_files' => $request->invoice_files,
+    //             'updated_by' => Auth::id(),
+    //         ]);
+
+    //         foreach ($request->details as $detail) {
+    //             // Cek apakah sudah ada inventory untuk incoming_item_id dan item_id tersebut    
+    //             if (isset($detail['id'])) {
+    //                 $inventory = Inventory::where('incoming_item_id', $incomingItem->id)
+    //                 ->where('id', $detail['id'])
+    //                 ->first();
+    //                 // Jika ada, update data inventory yang ada
+    //                 $inventory->update([
+    //                     'gross_weight' => $detail['gross_weight'],
+    //                     'net_weight' => $detail['net_weight'],
+    //                     'unit_price' => $detail['unit_price'],
+    //                     'initial_stock' => $detail['initial_stock'],
+    //                     'available_stock' => $detail['initial_stock'],
+    //                     'actual_stock' => $detail['initial_stock'],
+    //                     'total_price' => $detail['total_price'],
+    //                     'labor_cost' => $detail['labor_cost'],
+    //                     'notes' => $detail['notes'] ?? '',
+    //                     'updated_by' => Auth::id(),
+    //                 ]);
+    //             } 
+    //             else {
+    //                 // Jika tidak ada, buat record baru
+    //                 $batchController = new BatchController();
+    //                 $batchCode = $batchController->generateBatchCode($request->supplier_id);
+    
+    //                 $batch = Batch::create([
+    //                     'batch_code' => $batchCode,
+    //                     'supplier_id' => $request->supplier_id,
+    //                     'incoming_item_id' => $incomingItem->id,
+    //                     'item_id' => $detail['item_id'],
+    //                     'batch_code_type' => Supplier::find($request->supplier_id)->supplier_type,
+    //                 ]);
+    
+    //                 $barcodeNumber = $this->generateBarcodeNumber();
+    //                 Inventory::create([
+    //                     'incoming_item_id' => $incomingItem->id,
+    //                     'item_id' => $detail['item_id'],
+    //                     'batch_id' => $batch->id,
+    //                     'warehouse_id' => 1,
+    //                     'barcode_number' => $barcodeNumber,
+    //                     'description' => $detail['description'],
+    //                     'gross_weight' => $detail['gross_weight'],
+    //                     'net_weight' => $detail['net_weight'],
+    //                     'unit_price' => $detail['unit_price'],
+    //                     'initial_stock' => $detail['initial_stock'],
+    //                     'available_stock' => $detail['initial_stock'],
+    //                     'actual_stock' => $detail['initial_stock'],
+    //                     'total_price' => $detail['total_price'],
+    //                     'labor_cost' => $detail['labor_cost'],
+    //                     'notes' => $detail['notes'] ?? '',
+    //                     'created_by' => Auth::id(),
+    //                 ]);
+    //             }
+    //         }
+    //     });
+    
+    //     return response()->json(['message' => 'Data updated successfully'], 200);
+    // }
+
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -269,19 +377,18 @@ class IncomingItemController extends Controller
             'details.*.notes' => 'nullable|string',
             'details.*.expiry_date' => 'nullable|date',
         ]);
-    
-        // Mulai transaction untuk update
+
         DB::transaction(function () use ($request, $id) {
             $shipmentDate = Carbon::parse($request->shipment_date)->format('Y-m-d H:i:s');
             $receivedDate = Carbon::parse($request->received_date)->format('Y-m-d H:i:s');
-    
+
             // Update IncomingItem
             $incomingItem = IncomingItem::findOrFail($id);
             $incomingItem->update([
                 'incoming_item_code' => $request->incoming_item_code,
                 'supplier_id' => $request->supplier_id,
                 'shipment_date' => $shipmentDate,
-                'received_date' => $receivedDate,                
+                'received_date' => $receivedDate,
                 'total_item_price' => $request->total_item_price,
                 'shipping_cost' => $request->shipping_cost,
                 'labor_cost' => $request->labor_cost,
@@ -292,31 +399,43 @@ class IncomingItemController extends Controller
                 'updated_by' => Auth::id(),
             ]);
 
+            // Ambil detail yang ada di database
+            $existingDetails = Inventory::where('incoming_item_id', $incomingItem->id)->get()->keyBy('id');
+
+            // Array untuk ID detail yang baru
+            $newDetailIds = collect($request->details)->pluck('id')->filter();
+
+            // Hapus detail yang tidak ada di request
+            foreach ($existingDetails as $detail) {
+                if (!$newDetailIds->contains($detail->id)) {
+                    $detail->delete(); // Hapus detail yang tidak ada di request
+                }
+            }
+
+            // Proses update atau insert detail
             foreach ($request->details as $detail) {
-                // Cek apakah sudah ada inventory untuk incoming_item_id dan item_id tersebut    
+                // Cek apakah detail sudah ada
                 if (isset($detail['id'])) {
-                    $inventory = Inventory::where('incoming_item_id', $incomingItem->id)
-                    ->where('id', $detail['id'])
-                    ->first();
-                    // Jika ada, update data inventory yang ada
-                    $inventory->update([
-                        'gross_weight' => $detail['gross_weight'],
-                        'net_weight' => $detail['net_weight'],
-                        'unit_price' => $detail['unit_price'],
-                        'initial_stock' => $detail['initial_stock'],
-                        'available_stock' => $detail['initial_stock'],
-                        'actual_stock' => $detail['initial_stock'],
-                        'total_price' => $detail['total_price'],
-                        'labor_cost' => $detail['labor_cost'],
-                        'notes' => $detail['notes'] ?? '',
-                        'updated_by' => Auth::id(),
-                    ]);
-                } 
-                else {
+                    // Update data inventory yang ada
+                    if ($existingDetails->has($detail['id'])) {
+                        $existingDetails[$detail['id']]->update([
+                            'gross_weight' => $detail['gross_weight'],
+                            'net_weight' => $detail['net_weight'],
+                            'unit_price' => $detail['unit_price'],
+                            'initial_stock' => $detail['initial_stock'],
+                            'available_stock' => $detail['initial_stock'],
+                            'actual_stock' => $detail['initial_stock'],
+                            'total_price' => $detail['total_price'],
+                            'labor_cost' => $detail['labor_cost'],
+                            'notes' => $detail['notes'] ?? '',
+                            'updated_by' => Auth::id(),
+                        ]);
+                    }
+                } else {
                     // Jika tidak ada, buat record baru
                     $batchController = new BatchController();
                     $batchCode = $batchController->generateBatchCode($request->supplier_id);
-    
+
                     $batch = Batch::create([
                         'batch_code' => $batchCode,
                         'supplier_id' => $request->supplier_id,
@@ -324,7 +443,7 @@ class IncomingItemController extends Controller
                         'item_id' => $detail['item_id'],
                         'batch_code_type' => Supplier::find($request->supplier_id)->supplier_type,
                     ]);
-    
+
                     $barcodeNumber = $this->generateBarcodeNumber();
                     Inventory::create([
                         'incoming_item_id' => $incomingItem->id,
@@ -347,9 +466,10 @@ class IncomingItemController extends Controller
                 }
             }
         });
-    
+
         return response()->json(['message' => 'Data updated successfully'], 200);
     }
+
     
 
     /**

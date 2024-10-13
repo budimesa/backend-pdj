@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ItemTransfer;
+use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -12,9 +13,73 @@ class ItemTransferController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return ItemTransfer::with(['inventories', 'fromWarehouse', 'toWarehouse'])->get();
+        $query = ItemTransfer::query();
+
+        // Apply global filter
+        if ($request->has('filters.global.value')) {
+            $query->where('notes', 'like', '%' . $request->input('filters.global.value') . '%');
+        }
+
+        // Apply specific filters
+        if ($request->has('filters.incoming_item_code.value')) {
+            $query->whereHas('inventories', function ($q) use ($request) {
+                $q->whereHas('incomingItem', function ($q) use ($request) {
+                    $q->where('incoming_item_code', 'like', $request->input('filters.incoming_item_code.value') . '%');
+                });
+            });
+        }
+
+        if ($request->has('filters.notes.value')) {
+            $query->where('notes', 'like', '%' . $request->input('filters.notes.value') . '%');
+        }
+
+        $query->with(['inventories.incomingItem', 'fromWarehouse', 'toWarehouse']);
+        $query->orderBy('created_at', 'desc'); 
+        $perPage = $request->input('per_page', 10);
+        $page = $request->input('page', 1);
+        $offset = ($page - 1) * $perPage;
+        $results = $query->paginate($perPage, ['*'], 'page', $page);
+
+
+        $data = collect($results->items())->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'incoming_item_code' => $item->inventories->isNotEmpty() ? $item->inventories->first()->incomingItem->incoming_item_code : null,
+                'transfer_code' => $item->transfer_code,
+                'from_warehouse_name' => $item->fromWarehouse->warehouse_name ?? null,
+                'to_warehouse_name' => $item->toWarehouse->warehouse_name ?? null,
+                'total_quantity' => $item->total_quantity,
+                'total_item_price' => $item->total_item_price,
+                'transfer_status' => $item->transfer_status,
+                'notes' => $item->notes,
+                'creator' => $item->creator ? $item->creator->name : null,
+                'created_at' => $item->created_at,
+                'updated_at' => $item->updated_at,
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
+            'total' => $results->total(),
+            'per_page' => $results->perPage(),
+            'current_page' => $results->currentPage(),
+            'from' => $results->firstItem(),
+            'last_page' => $results->lastPage(),
+            'offset' => $offset
+        ]);
+    }
+
+    public function getLastItem()
+    {
+        $lastItem = ItemTransfer::latest()->first();
+
+        if ($lastItem) {
+            return response()->json($lastItem, 200);
+        }
+
+        return response()->json(['message' => 'No items found'], 205);
     }
 
     /**
@@ -28,16 +93,14 @@ class ItemTransferController extends Controller
             'from_warehouse_id' => 'required|exists:warehouses,id',
             'to_warehouse_id' => 'required|exists:warehouses,id', 
             'total_quantity' => 'required|numeric',
-            'total_price' => 'required|numeric',
-            'transfer_status' => 'required',
+            'total_item_price' => 'required|numeric',
+            // 'transfer_status' => 'required',
             'details' => 'required|array',
             'details.*.item_id' => 'required',
-            'details.*.gross_weight' => 'required|numeric',
             'details.*.net_weight' => 'required|numeric',
             'details.*.unit_price' => 'required|numeric',
-            'details.*.initial_stock' => 'required|numeric',
+            'details.*.actual_stock' => 'required|numeric',
             'details.*.total_price' => 'required|numeric',
-            'details.*.labor_cost' => 'required|numeric',
             'details.*.notes' => 'nullable|string',
             'details.*.expiry_date' => 'nullable|date',
         ]);
@@ -53,36 +116,38 @@ class ItemTransferController extends Controller
                 'from_warehouse_id' => $request->from_warehouse_id,
                 'to_warehouse_id' => $request->to_warehouse_id,
                 'total_quantity' => $request->total_quantity,
-                'total_price' => $request->total_price,
-                'transfer_status' => $request->transfer_status,
+                'total_item_price' => $request->total_item_price,
+                'shipping_cost' => $request->shipping_cost,
+                'total_cost' => $request->total_cost,
+                'transfer_status' => 1,
                 'notes' => $request->notes,
                 'created_by' => Auth::id(),
             ]);
 
             foreach ($details as $index => $detail) {
-                if(isset($detail['id'])) {
-                    $inventory = Inventory::where('incoming_item_id', $incomingItem->id)
-                    ->where('id', $detail['id'])
+                if(isset($detail['inventory_id'])) {
+                    $inventory = Inventory::where('id', $detail['inventory_id'])
                     ->first();
                     // update data inventory yang ada
                     $inventory->update([
-                        'available_stock' => $detail['initial_stock'],
-                        'actual_stock' => $detail['initial_stock'],
+                        'available_stock' => $inventory->available_stock - $detail['actual_stock'],
+                        'actual_stock' =>  $inventory->available_stock - $detail['actual_stock'],
                     ]);
                     //  insert data inventory untuk barang transfer
                     Inventory::create([
+                        'incoming_item_id' => $inventory->incoming_item_id,
                         'item_transfer_id' => $itemTransfer->id,
                         'item_id' => $detail['item_id'],
                         'batch_id' => $detail['batch_id'],
-                        'warehouse_id' => $detail['to_warehouse_id'],
+                        'warehouse_id' => $request->to_warehouse_id,
                         'barcode_number' => $detail['barcode_number'],
                         'description' => $detail['description'],
                         'gross_weight' => $detail['gross_weight'],
                         'net_weight' => $detail['net_weight'],
                         'unit_price' => $detail['unit_price'],
                         'initial_stock' => $detail['initial_stock'],
-                        'available_stock' => $detail['initial_stock'],
-                        'actual_stock' => $detail['initial_stock'],
+                        'available_stock' => $detail['actual_stock'],
+                        'actual_stock' => $detail['actual_stock'],
                         'total_price' => $detail['total_price'],
                         'labor_cost' => $detail['labor_cost'],
                         'notes' => '',
@@ -94,15 +159,41 @@ class ItemTransferController extends Controller
             }
         });
 
-        return response()->json($itemTransfer, 201);
+        return response()->json(['message' => 'Data inserted successfully'], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(ItemTransfer $itemTransfer)
     {
-        //
+        $itemTransfer->load(['fromWarehouse', 'toWarehouse', 'inventories.item', 'inventories.batch', 'inventories.warehouse']);
+
+        $details = $itemTransfer->inventories->map(function ($inventory) {
+            return [
+                'id' => $inventory->id,
+                'incoming_item_id' => $inventory->incoming_item_id,
+                'item_id' => $inventory->item_id,
+                'batch_id' => $inventory->batch_id,
+                'batch_code' => $inventory->batch->batch_code,
+                'description' => $inventory->description,
+                'barcode_number' => $inventory->barcode_number,
+                'gross_weight' => $inventory->gross_weight,
+                'net_weight' => $inventory->net_weight,
+                'unit_price' => $inventory->unit_price,
+                'initial_stock' => $inventory->initial_stock,
+                'available_stock' => $inventory->available_stock,
+                'actual_stock' => $inventory->actual_stock,
+                'total_price' => $inventory->total_price,
+                'labor_cost' => $inventory->labor_cost,
+                'expiry_date' => $inventory->expiry_date,
+                'notes' => $inventory->notes,
+                'transaction_type' => $inventory->transaction_type,
+                'price_status' => $inventory->price_status,
+            ];
+        });
+
+        return response()->json(['item_transfer' => $itemTransfer, 'details' => $details], 200);
     }
 
     /**
