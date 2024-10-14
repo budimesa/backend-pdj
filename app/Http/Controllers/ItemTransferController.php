@@ -167,12 +167,14 @@ class ItemTransferController extends Controller
      */
     public function show(ItemTransfer $itemTransfer)
     {
-        $itemTransfer->load(['fromWarehouse', 'toWarehouse', 'inventories.item', 'inventories.batch', 'inventories.warehouse']);
+        $itemTransfer->load(['fromWarehouse', 'toWarehouse', 'inventories.incomingItem', 'inventories.item',  'inventories.batch', 'inventories.warehouse']);
 
         $details = $itemTransfer->inventories->map(function ($inventory) {
             return [
                 'id' => $inventory->id,
                 'incoming_item_id' => $inventory->incoming_item_id,
+                'incoming_item_code' => $inventory->incomingItem->incoming_item_code,
+                'concat_code_name' => $inventory->item->item_code . ' - ' . $inventory->item->item_name,
                 'item_id' => $inventory->item_id,
                 'batch_id' => $inventory->batch_id,
                 'batch_code' => $inventory->batch->batch_code,
@@ -199,9 +201,124 @@ class ItemTransferController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $validated = $request->validate([
+            'transfer_code' => 'required|unique:item_transfers,transfer_code,' . $id,
+            'transfer_date' => 'required',
+            'from_warehouse_id' => 'required|exists:warehouses,id',
+            'to_warehouse_id' => 'required|exists:warehouses,id', 
+            'total_quantity' => 'required|numeric',
+            'total_item_price' => 'required|numeric',
+            // 'transfer_status' => 'required',
+            'details' => 'required|array',
+            'details.*.item_id' => 'required',
+            'details.*.net_weight' => 'required|numeric',
+            'details.*.unit_price' => 'required|numeric',
+            'details.*.actual_stock' => 'required|numeric',
+            'details.*.total_price' => 'required|numeric',
+            'details.*.notes' => 'nullable|string',
+            'details.*.expiry_date' => 'nullable|date',
+        ]);
+
+        DB::transaction(function () use ($request, $id) {
+            $transferDate = Carbon::parse($request->transfer_date)->format('Y-m-d H:i:s');
+            
+            $itemTransfer = ItemTransfer::findOrFail($id);
+            $itemTransfer->update([                
+                'transfer_date' => $transferDate,                
+                'from_warehouse_id' => $request->from_warehouse_id,
+                'to_warehouse_id' => $request->to_warehouse_id,
+                'total_quantity' => $request->total_quantity,
+                'total_item_price' => $request->total_item_price,
+                'shipping_cost' => $request->shipping_cost,
+                'total_cost' => $request->total_cost,
+                'transfer_status' => 1,
+                'notes' => $request->notes,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Ambil detail yang ada di database
+            $existingDetails = Inventory::where('item_transfer_id', $itemTransfer->id)->get()->keyBy('id');
+
+            // Array untuk ID detail yang baru
+            $newDetailIds = collect($request->details)->pluck('id')->filter();
+
+            // Hapus detail yang tidak ada di request
+            foreach ($existingDetails as $detail) {
+                if (!$newDetailIds->contains($detail->id)) {
+                    $detail->delete(); // Hapus detail yang tidak ada di request
+                }
+            }
+
+            // Proses update atau insert detail
+            foreach ($request->details as $detail) {
+                // Cek apakah detail sudah ada
+                if (isset($detail['id'])) {
+                    // Update data inventory yang ada
+                    if ($existingDetails->has($detail['id'])) {
+                        $existingDetail = $existingDetails->get($detail['id']);
+                        $actualStockDifference = $detail['actual_stock'] - $existingDetail->actual_stock;
+
+                        if ($actualStockDifference > 0) {
+                            // Jika actual stock pada existing lebih kecil
+                            $inventory = Inventory::where('net_weight', $detail['net_weight'])
+                                                ->where('warehouse_id', $request->from_warehouse_id)
+                                                ->first();
+
+                            if ($inventory) {
+                                $inventory->available_stock += $actualStockDifference;
+                                $inventory->actual_stock += $actualStockDifference; // Tambah selisih
+                                $inventory->save();
+                            }
+                        } elseif ($actualStockDifference < 0) {
+                            // Jika actual stock pada existing lebih besar
+                            $inventory = Inventory::where('net_weight', $detail['net_weight'])
+                                                ->where('warehouse_id', $request->from_warehouse_id)
+                                                ->first();
+
+                            if ($inventory) {
+                                $inventory->available_stock += $actualStockDifference; // Kurangi selisih
+                                $inventory->actual_stock += $actualStockDifference; // Kurangi selisih
+                                $inventory->save();
+                            }
+                        }
+
+                        $existingDetails[$detail['id']]->update([                                                                                                             
+                            'available_stock' => $detail['actual_stock'],
+                            'actual_stock' => $detail['actual_stock'],
+                            'notes' => $detail['notes'] ?? '',
+                            'updated_by' => Auth::id(),
+                        ]);
+                    }
+                } else {
+                    // Jika tidak ada, buat record baru                    
+                    Inventory::create([
+                        'incoming_item_id' => $detail->incoming_item_id,
+                        'item_transfer_id' => $itemTransfer->id,
+                        'item_id' => $detail['item_id'],
+                        'batch_id' => $detail['batch_id'],
+                        'warehouse_id' => $request->to_warehouse_id,
+                        'barcode_number' => $detail['barcode_number'],
+                        'description' => $detail['description'],
+                        'gross_weight' => $detail['gross_weight'],
+                        'net_weight' => $detail['net_weight'],
+                        'unit_price' => $detail['unit_price'],
+                        'initial_stock' => $detail['initial_stock'],
+                        'available_stock' => $detail['actual_stock'],
+                        'actual_stock' => $detail['actual_stock'],
+                        'total_price' => $detail['total_price'],
+                        'labor_cost' => $detail['labor_cost'],
+                        'notes' => '',
+                        'transaction_type' => 2, // Transfer
+                        // 'expiry_date' => $detail['expiry_date'],                    
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            }
+        });
+
+        return response()->json(['message' => 'Data updated successfully'], 200);
     }
 
     /**
