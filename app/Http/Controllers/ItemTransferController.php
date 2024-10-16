@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ItemTransfer;
 use App\Models\Inventory;
+use App\Models\InventoryDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -124,35 +125,24 @@ class ItemTransferController extends Controller
 
             foreach ($details as $index => $detail) {
                 if(isset($detail['inventory_id'])) {
-                    $inventory = Inventory::where('id', $detail['inventory_id'])
-                    ->first();
-                    // update data inventory yang ada
-                    $inventory->update([
-                        'available_stock' => $inventory->available_stock - $detail['actual_stock'],
-                        'actual_stock' =>  $inventory->available_stock - $detail['actual_stock'],
-                    ]);
-                    //  insert data inventory untuk barang transfer
-                    Inventory::create([
-                        'incoming_item_id' => $inventory->incoming_item_id,
-                        'item_transfer_id' => $itemTransfer->id,
-                        'item_id' => $detail['item_id'],
-                        'batch_id' => $detail['batch_id'],
-                        'warehouse_id' => $request->to_warehouse_id,
-                        'barcode_number' => $detail['barcode_number'],
-                        'description' => $detail['description'],
-                        'gross_weight' => $detail['gross_weight'],
-                        'net_weight' => $detail['net_weight'],
-                        'unit_price' => $detail['unit_price'],
-                        'initial_stock' => $detail['initial_stock'],
-                        'available_stock' => $detail['actual_stock'],
-                        'actual_stock' => $detail['actual_stock'],
-                        'total_price' => $detail['total_price'],
-                        'labor_cost' => $detail['labor_cost'],
-                        'notes' => '',
-                        'transaction_type' => 2, // Transfer
-                        // 'expiry_date' => $detail['expiry_date'],                    
-                        'created_by' => Auth::id(),
-                    ]);
+                    $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
+                        ->where('warehouse_id', $request->from_warehouse_id)
+                        ->first();
+
+                    if ($inventoryDetail) {
+                        // Jika inventoryDetail ditemukan, update quantity-nya
+                        $inventoryDetail->update([
+                            'quantity' => $inventoryDetail->quantity_stock - $detail['actual_stock'],
+                        ]);
+                    } else {
+                        // Jika inventoryDetail tidak ditemukan, buat entri baru dengan warehouse_id diisi dengan $request->to_warehouse_id
+                        InventoryDetail::create([
+                            'inventory_id'   => $detail['inventory_id'],
+                            'warehouse_id'   => $request->to_warehouse_id, // Di sini kita set warehouse_id menjadi $request->to_warehouse_id
+                            'quantity'       => $inventoryDetail->quantity_stock - $detail['actual_stock'],
+                            'created_by' => Auth::id(),
+                        ]);
+                    }
                 }
             }
         });
