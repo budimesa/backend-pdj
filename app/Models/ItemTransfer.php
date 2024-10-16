@@ -25,4 +25,9 @@ class ItemTransfer extends Model
     {
         return $this->belongsTo(Warehouse::class, 'to_warehouse_id');
     }
+
+    public function inventories()
+    {
+        return $this->hasManyThrough(Inventory::class, ItemTransferDetail::class, 'item_transfer_id', 'id', 'id', 'inventory_id');
+    }
 }

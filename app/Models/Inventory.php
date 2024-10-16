@@ -16,7 +16,7 @@ class Inventory extends Model
 
     public function incomingItem()
     {
-        return $this->belongsTo(IncomingItem::class);
+        return $this->belongsTo(IncomingItem::class, 'incoming_item_id');
     }
 
     public function item()

@@ -24,19 +24,19 @@ class ItemTransferController extends Controller
         }
 
         // Apply specific filters
-        if ($request->has('filters.incoming_item_code.value')) {
-            $query->whereHas('inventories', function ($q) use ($request) {
-                $q->whereHas('incomingItem', function ($q) use ($request) {
-                    $q->where('incoming_item_code', 'like', $request->input('filters.incoming_item_code.value') . '%');
-                });
-            });
-        }
+        // if ($request->has('filters.incoming_item_code.value')) {
+        //     $query->whereHas('inventories', function ($q) use ($request) {
+        //         $q->whereHas('incomingItem', function ($q) use ($request) {
+        //             $q->where('incoming_item_code', 'like', $request->input('filters.incoming_item_code.value') . '%');
+        //         });
+        //     });
+        // }
 
         if ($request->has('filters.notes.value')) {
             $query->where('notes', 'like', '%' . $request->input('filters.notes.value') . '%');
         }
 
-        $query->with(['inventories.incomingItem', 'fromWarehouse', 'toWarehouse']);
+        $query->with(['inventories', 'fromWarehouse', 'toWarehouse']);
         $query->orderBy('created_at', 'desc'); 
         $perPage = $request->input('per_page', 10);
         $page = $request->input('page', 1);
@@ -47,7 +47,8 @@ class ItemTransferController extends Controller
         $data = collect($results->items())->map(function ($item) {
             return [
                 'id' => $item->id,
-                'incoming_item_code' => $item->inventories->isNotEmpty() ? $item->inventories->first()->incomingItem->incoming_item_code : null,
+                // 'incoming_item_code' => $item->inventories->isNotEmpty() ? $item->inventories->first()->incomingItem->incoming_item_code : null,
+                'incoming_item_code' => $item->inventories->pluck('incoming_item_id')->first(),
                 'transfer_code' => $item->transfer_code,
                 'from_warehouse_name' => $item->fromWarehouse->warehouse_name ?? null,
                 'to_warehouse_name' => $item->toWarehouse->warehouse_name ?? null,
@@ -94,7 +95,6 @@ class ItemTransferController extends Controller
             'from_warehouse_id' => 'required|exists:warehouses,id',
             'to_warehouse_id' => 'required|exists:warehouses,id', 
             'total_quantity' => 'required|numeric',
-            'total_item_price' => 'required|numeric',
             // 'transfer_status' => 'required',
             'details' => 'required|array',
             'details.*.item_id' => 'required',
@@ -117,7 +117,6 @@ class ItemTransferController extends Controller
                 'from_warehouse_id' => $request->from_warehouse_id,
                 'to_warehouse_id' => $request->to_warehouse_id,
                 'total_quantity' => $request->total_quantity,
-                'total_item_price' => $request->total_item_price,
                 'transfer_status' => 1,
                 'notes' => $request->notes,
                 'created_by' => Auth::id(),
@@ -125,21 +124,27 @@ class ItemTransferController extends Controller
 
             foreach ($details as $index => $detail) {
                 if(isset($detail['inventory_id'])) {
-                    $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
+                    $existInventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
+                        ->where('warehouse_id', $request->to_warehouse_id)
+                        ->first();
+                    if($existInventoryDetail) {
+                        $existInventoryDetail->update([
+                            'quantity' => $existInventoryDetail->quantity + $detail['actual_stock'],
+                        ]);
+                    }
+                    else {
+                        $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
                         ->where('warehouse_id', $request->from_warehouse_id)
                         ->first();
 
-                    if ($inventoryDetail) {
-                        // Jika inventoryDetail ditemukan, update quantity-nya
                         $inventoryDetail->update([
-                            'quantity' => $inventoryDetail->quantity_stock - $detail['actual_stock'],
+                            'quantity' => $inventoryDetail->quantity - $detail['actual_stock'],
                         ]);
-                    } else {
-                        // Jika inventoryDetail tidak ditemukan, buat entri baru dengan warehouse_id diisi dengan $request->to_warehouse_id
+
                         InventoryDetail::create([
                             'inventory_id'   => $detail['inventory_id'],
-                            'warehouse_id'   => $request->to_warehouse_id, // Di sini kita set warehouse_id menjadi $request->to_warehouse_id
-                            'quantity'       => $inventoryDetail->quantity_stock - $detail['actual_stock'],
+                            'warehouse_id'   => $request->to_warehouse_id,
+                            'quantity'       => $detail['actual_stock'],
                             'created_by' => Auth::id(),
                         ]);
                     }
@@ -197,7 +202,6 @@ class ItemTransferController extends Controller
             'from_warehouse_id' => 'required|exists:warehouses,id',
             'to_warehouse_id' => 'required|exists:warehouses,id', 
             'total_quantity' => 'required|numeric',
-            'total_item_price' => 'required|numeric',
             // 'transfer_status' => 'required',
             'details' => 'required|array',
             'details.*.item_id' => 'required',
@@ -218,7 +222,6 @@ class ItemTransferController extends Controller
                 'from_warehouse_id' => $request->from_warehouse_id,
                 'to_warehouse_id' => $request->to_warehouse_id,
                 'total_quantity' => $request->total_quantity,
-                'total_item_price' => $request->total_item_price,                
                 'transfer_status' => 1,
                 'notes' => $request->notes,
                 'updated_by' => Auth::id(),
