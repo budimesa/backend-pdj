@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('incoming_item_id')->constrained('incoming_items')->onDelete('cascade');
             $table->foreignId('item_id')->constrained('items')->onDelete('cascade');
             $table->foreignId('batch_id')->constrained('batches')->onDelete('cascade');
-            $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->string('description');
             $table->string('barcode_number');
             $table->decimal('gross_weight', 10, 2);

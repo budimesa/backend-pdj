@@ -11,9 +11,9 @@ class Warehouse extends Model
 
     protected $guarded = [];
 
-    public function inventories()
+    public function inventoryDetails()
     {
-        return $this->hasMany(Inventory::class);
+        return $this->hasMany(InventoryDetail::class);
     }
 
     public function itemTransfersFrom()

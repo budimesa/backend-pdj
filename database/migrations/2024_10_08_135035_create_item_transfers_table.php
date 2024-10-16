@@ -19,9 +19,6 @@ return new class extends Migration
             $table->foreignId('to_warehouse_id')->constrained('warehouses'); // ID gudang tujuan
             $table->integer('total_quantity'); // Total jumlah barang
             $table->decimal('total_item_price', 15, 2); // Total harga barang
-            $table->decimal('shipping_cost', 15, 2)->nullable();
-            $table->decimal('other_fee', 15, 2)->nullable();
-            $table->decimal('total_cost', 15, 2);
             $table->tinyInteger('transfer_status')->unsigned()->default(1);
             $table->text('notes')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();

@@ -28,14 +28,19 @@ class Inventory extends Model
     {
         return $this->belongsTo(Batch::class);
     }
+    public function inventoryDetails()
+    {
+        return $this->hasMany(InventoryDetail::class);
+    }
+
+    public function itemTransferDetails()
+    {
+        return $this->hasMany(ItemTransferDetail::class);
+    }
 
     public function warehouse()
     {
-        return $this->belongsTo(Warehouse::class);
+        return $this->hasManyThrough(Warehouse::class, InventoryDetail::class, 'inventory_id', 'id', 'id', 'warehouse_id');
     }
-
-    public function itemTransfer()
-    {
-        return $this->belongsTo(ItemTransfer::class);
-    }
+    
 }

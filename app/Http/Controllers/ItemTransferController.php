@@ -117,8 +117,6 @@ class ItemTransferController extends Controller
                 'to_warehouse_id' => $request->to_warehouse_id,
                 'total_quantity' => $request->total_quantity,
                 'total_item_price' => $request->total_item_price,
-                'shipping_cost' => $request->shipping_cost,
-                'total_cost' => $request->total_cost,
                 'transfer_status' => 1,
                 'notes' => $request->notes,
                 'created_by' => Auth::id(),
@@ -230,9 +228,7 @@ class ItemTransferController extends Controller
                 'from_warehouse_id' => $request->from_warehouse_id,
                 'to_warehouse_id' => $request->to_warehouse_id,
                 'total_quantity' => $request->total_quantity,
-                'total_item_price' => $request->total_item_price,
-                'shipping_cost' => $request->shipping_cost,
-                'total_cost' => $request->total_cost,
+                'total_item_price' => $request->total_item_price,                
                 'transfer_status' => 1,
                 'notes' => $request->notes,
                 'updated_by' => Auth::id(),
@@ -310,8 +306,7 @@ class ItemTransferController extends Controller
                         'total_price' => $detail['total_price'],
                         'labor_cost' => $detail['labor_cost'],
                         'notes' => '',
-                        'transaction_type' => 2, // Transfer
-                        // 'expiry_date' => $detail['expiry_date'],                    
+                        'transaction_type' => 2, // Transfer                  
                         'created_by' => Auth::id(),
                     ]);
                 }

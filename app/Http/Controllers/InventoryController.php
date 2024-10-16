@@ -55,7 +55,7 @@ class InventoryController extends Controller
                 $item->item->item_code . ' - ' . $item->item->item_name . ' @' . $item->net_weight . ' KG ] ' . ' ( ' . $item->actual_stock . ' Dus )',
                 'batch_id' => $item->batch ? $item->batch->id: null,
                 'batch_code' => $item->batch ? $item->batch->batch_code : null,
-                'warehouse_name' => $item->warehouse ? $item->warehouse->warehouse_name : null,
+                'warehouse_name' => $item->warehouse->pluck('warehouse_name')->first(),
                 'description' => $item->description,
                 'barcode_number' => $item->barcode_number,
                 'gross_weight' => $item->gross_weight,

@@ -12,11 +12,10 @@ class ItemTransfer extends Model
 
     protected $guarded = [];
 
-    public function inventories()
+    public function itemTransferDetails()
     {
-        return $this->hasMany(Inventory::class);
+        return $this->hasMany(ItemTransferDetail::class);
     }
-
     public function fromWarehouse()
     {
         return $this->belongsTo(Warehouse::class, 'from_warehouse_id');
