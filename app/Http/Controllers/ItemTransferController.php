@@ -224,7 +224,7 @@ class ItemTransferController extends Controller
             ]);
 
             // Ambil detail yang ada di database
-            $existingDetails = Inventory::where('item_transfer_id', $itemTransfer->id)->get()->keyBy('id');
+            $existingDetails = ItemTransferDetail::where('item_transfer_id', $itemTransfer->id)->get()->keyBy('id');
 
             // Array untuk ID detail yang baru
             $newDetailIds = collect($request->details)->pluck('id')->filter();
