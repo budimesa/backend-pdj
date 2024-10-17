@@ -13,6 +13,10 @@ class InventoryController extends Controller
     public function index(Request $request)
     {
         $query = Inventory::query();
+
+        if ($request->has('from_warehouse_id')) {
+            $query->where('from_warehouse_id', $request->input('from_warehouse_id'));
+        }
         
         // Apply global filter
         if ($request->has('filters.global.value')) {

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class ItemTransferDetail extends Model
 {
     use HasFactory;
+    
+    protected $guarded = [];
 
    public function itemTransfer()
     {

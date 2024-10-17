@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ItemTransfer;
+use App\Models\ItemTransferDetail;
 use App\Models\Inventory;
 use App\Models\InventoryDetail;
 use Illuminate\Http\Request;
@@ -23,20 +24,11 @@ class ItemTransferController extends Controller
             $query->where('notes', 'like', '%' . $request->input('filters.global.value') . '%');
         }
 
-        // Apply specific filters
-        // if ($request->has('filters.incoming_item_code.value')) {
-        //     $query->whereHas('inventories', function ($q) use ($request) {
-        //         $q->whereHas('incomingItem', function ($q) use ($request) {
-        //             $q->where('incoming_item_code', 'like', $request->input('filters.incoming_item_code.value') . '%');
-        //         });
-        //     });
-        // }
-
         if ($request->has('filters.notes.value')) {
             $query->where('notes', 'like', '%' . $request->input('filters.notes.value') . '%');
         }
 
-        $query->with(['inventories', 'fromWarehouse', 'toWarehouse']);
+        $query->with(['fromWarehouse', 'toWarehouse']);
         $query->orderBy('created_at', 'desc'); 
         $perPage = $request->input('per_page', 10);
         $page = $request->input('page', 1);
@@ -47,8 +39,6 @@ class ItemTransferController extends Controller
         $data = collect($results->items())->map(function ($item) {
             return [
                 'id' => $item->id,
-                // 'incoming_item_code' => $item->inventories->isNotEmpty() ? $item->inventories->first()->incomingItem->incoming_item_code : null,
-                'incoming_item_code' => $item->inventories->pluck('incoming_item_id')->first(),
                 'transfer_code' => $item->transfer_code,
                 'from_warehouse_name' => $item->fromWarehouse->warehouse_name ?? null,
                 'to_warehouse_name' => $item->toWarehouse->warehouse_name ?? null,
@@ -99,9 +89,6 @@ class ItemTransferController extends Controller
             'details' => 'required|array',
             'details.*.item_id' => 'required',
             'details.*.net_weight' => 'required|numeric',
-            'details.*.unit_price' => 'required|numeric',
-            'details.*.actual_stock' => 'required|numeric',
-            'details.*.total_price' => 'required|numeric',
             'details.*.notes' => 'nullable|string',
             'details.*.expiry_date' => 'nullable|date',
         ]);
@@ -148,6 +135,13 @@ class ItemTransferController extends Controller
                             'created_by' => Auth::id(),
                         ]);
                     }
+
+                    ItemTransferDetail::create([
+                        'item_transfer_id' => $itemTransfer->id,
+                        'inventory_id'   => $detail['inventory_id'],
+                        'quantity'       => $detail['actual_stock'],
+                        'created_by' => Auth::id(),
+                    ]);
                 }
             }
         });
@@ -160,9 +154,12 @@ class ItemTransferController extends Controller
      */
     public function show(ItemTransfer $itemTransfer)
     {
-        $itemTransfer->load(['fromWarehouse', 'toWarehouse', 'inventories.incomingItem', 'inventories.item',  'inventories.batch', 'inventories.warehouse']);
+        $itemTransfer->load(['fromWarehouse', 'toWarehouse', 'itemTransferDetails', 'inventories.incomingItem', 'inventories.item', 'inventories.batch', 'inventories.warehouse']);
 
-        $details = $itemTransfer->inventories->map(function ($inventory) {
+        $details = $itemTransfer->inventories->map(function ($inventory) use ($itemTransfer) {
+            // Find the corresponding item transfer detail for the current inventory
+            $itemTransferDetail = $itemTransfer->itemTransferDetails->firstWhere('inventory_id', $inventory->id);
+
             return [
                 'id' => $inventory->id,
                 'incoming_item_id' => $inventory->incoming_item_id,
@@ -175,12 +172,10 @@ class ItemTransferController extends Controller
                 'barcode_number' => $inventory->barcode_number,
                 'gross_weight' => $inventory->gross_weight,
                 'net_weight' => $inventory->net_weight,
-                'unit_price' => $inventory->unit_price,
+                'transfer_quantity' => $itemTransferDetail ? $itemTransferDetail->quantity : 0, // Default to 0 if no detail found
                 'initial_stock' => $inventory->initial_stock,
                 'available_stock' => $inventory->available_stock,
                 'actual_stock' => $inventory->actual_stock,
-                'total_price' => $inventory->total_price,
-                'labor_cost' => $inventory->labor_cost,
                 'expiry_date' => $inventory->expiry_date,
                 'notes' => $inventory->notes,
                 'transaction_type' => $inventory->transaction_type,
@@ -190,6 +185,7 @@ class ItemTransferController extends Controller
 
         return response()->json(['item_transfer' => $itemTransfer, 'details' => $details], 200);
     }
+
 
     /**
      * Update the specified resource in storage.
