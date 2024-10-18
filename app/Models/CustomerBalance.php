@@ -23,6 +23,6 @@ class CustomerBalance extends Model
 
     public function deposits()
     {
-        return $this->hasMany(CustomerBalanceDeposit::class);
+        return $this->hasMany(CustomerBalanceDeposit::class, 'customer_balance_id'); // Pastikan kolom foreign key sesuai
     }
 }

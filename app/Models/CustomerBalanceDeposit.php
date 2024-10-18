@@ -13,6 +13,7 @@ class CustomerBalanceDeposit extends Model
 
     public function balance()
     {
-        return $this->belongsTo(CustomerBalance::class);
+        return $this->belongsTo(CustomerBalance::class, 'customer_balance_id'); // Pastikan kolom foreign key sesuai
     }
+    
 }

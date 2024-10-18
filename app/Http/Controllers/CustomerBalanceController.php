@@ -62,20 +62,6 @@ class CustomerBalanceController extends Controller
      
          return response()->json($customerBalance, 201);
     }
-     
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'customer_id' => 'required|exists:customers,id', // Pastikan customer ada
-    //         'balance_amount' => 'nullable|numeric',
-    //     ]);
-
-    //     $validated['created_by'] = Auth::id();
-
-    //     $customerBalance = CustomerBalance::create($validated);
-
-    //     return response()->json($customerBalance, 201);
-    // }
 
     /**
      * Display the specified resource.

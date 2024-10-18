@@ -17,6 +17,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerCreditLimitController;
 use App\Http\Controllers\CustomerBalanceController;
+use App\Http\Controllers\CustomerBalanceDepositController;
 use App\Http\Controllers\ItemTransferController;
 use App\Http\Controllers\InventoryDetailController;
 
@@ -27,50 +28,22 @@ Route::middleware('auth:sanctum')->post('/change-password', [AuthController::cla
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('suppliers', SupplierController::class);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('warehouses', WarehouseController::class);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('items', ItemController::class);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('incoming-items', IncomingItemController::class);
     Route::get('incoming-item-last-row', [IncomingItemController::class, 'getLastItem']);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('batches', BatchController::class);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('inventories', InventoryController::class);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('customers', CustomerController::class);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('customer-credit-limits', CustomerCreditLimitController::class);    
-});
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('customer-balances', CustomerBalanceController::class);    
-});
-
-Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('customer-balances', CustomerBalanceController::class);
+    Route::apiResource('customer-balance-deposits', CustomerBalanceDepositController::class);
     Route::apiResource('item-transfers', ItemTransferController::class);
     Route::get('item-transfer-last-row', [ItemTransferController::class, 'getLastItem']);
+    Route::apiResource('inventory-details', InventoryDetailController::class);
 });
 
-Route::apiResource('inventory-details', InventoryDetailController::class);
+
 
 // Route::get('fetch-merged-raw-wfg', [RawMaterialController::class, 'getMergedRawAndWFG']);

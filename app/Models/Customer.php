@@ -15,4 +15,9 @@ class Customer extends Model
     {
         return $this->hasMany(CustomerCreditLimit::class);
     }
+    
+     public function balances()
+    {
+        return $this->hasMany(CustomerBalance::class);
+    }
 }
