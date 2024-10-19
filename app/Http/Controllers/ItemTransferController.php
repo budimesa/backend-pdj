@@ -116,30 +116,30 @@ class ItemTransferController extends Controller
                         ->first();
                     if($existInventoryDetail) {
                         $existInventoryDetail->update([
-                            'quantity' => $existInventoryDetail->quantity + $detail['actual_stock'],
+                            'quantity' => $existInventoryDetail->quantity + $detail['quantity'],
                         ]);
                     }
                     else {
-                        $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
-                        ->where('warehouse_id', $request->from_warehouse_id)
-                        ->first();
-
-                        $inventoryDetail->update([
-                            'quantity' => $inventoryDetail->quantity - $detail['actual_stock'],
-                        ]);
-
                         InventoryDetail::create([
                             'inventory_id'   => $detail['inventory_id'],
                             'warehouse_id'   => $request->to_warehouse_id,
-                            'quantity'       => $detail['actual_stock'],
+                            'quantity'       => $detail['quantity'],
                             'created_by' => Auth::id(),
                         ]);
                     }
 
+                    $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
+                        ->where('warehouse_id', $request->from_warehouse_id)
+                        ->first();
+
+                        $inventoryDetail->update([
+                            'quantity' => $inventoryDetail->quantity - $detail['quantity'],
+                        ]);
+
                     ItemTransferDetail::create([
                         'item_transfer_id' => $itemTransfer->id,
                         'inventory_id'   => $detail['inventory_id'],
-                        'quantity'       => $detail['actual_stock'],
+                        'quantity'       => $detail['quantity'],
                         'created_by' => Auth::id(),
                     ]);
                 }
@@ -161,7 +161,7 @@ class ItemTransferController extends Controller
             $itemTransferDetail = $itemTransfer->itemTransferDetails->firstWhere('inventory_id', $inventory->id);
 
             return [
-                'id' => $inventory->id,
+                'inventory_id' => $inventory->id,
                 'incoming_item_id' => $inventory->incoming_item_id,
                 'incoming_item_code' => $inventory->incomingItem->incoming_item_code,
                 'concat_code_name' => $inventory->item->item_code . ' - ' . $inventory->item->item_name,
@@ -185,112 +185,6 @@ class ItemTransferController extends Controller
 
         return response()->json(['item_transfer' => $itemTransfer, 'details' => $details], 200);
     }
-
-
-    /**
-     * Update the specified resource in storage.
-     */
-    // public function update(Request $request, $id)
-    // {
-    //     $validated = $request->validate([
-    //         'transfer_code' => 'required|unique:item_transfers,transfer_code,' . $id,
-    //         'transfer_date' => 'required',
-    //         'from_warehouse_id' => 'required|exists:warehouses,id',
-    //         'to_warehouse_id' => 'required|exists:warehouses,id', 
-    //         'total_quantity' => 'required|numeric',
-    //         // 'transfer_status' => 'required',
-    //         'details' => 'required|array',
-    //         'details.*.item_id' => 'required',
-    //         // 'details.*.net_weight' => 'required|numeric',
-    //         'details.*.transfer_quantity' => 'required|numeric', // Ganti dari net_weight
-    //         'details.*.notes' => 'nullable|string',
-    //     ]);
-
-    //     DB::transaction(function () use ($request, $id) {
-    //         $transferDate = Carbon::parse($request->transfer_date)->format('Y-m-d H:i:s');
-            
-    //         $itemTransfer = ItemTransfer::findOrFail($id);
-    //         $itemTransfer->update([                
-    //             'transfer_date' => $transferDate,                
-    //             'from_warehouse_id' => $request->from_warehouse_id,
-    //             'to_warehouse_id' => $request->to_warehouse_id,
-    //             'total_quantity' => $request->total_quantity,
-    //             'transfer_status' => 1,
-    //             'notes' => $request->notes,
-    //             'updated_by' => Auth::id(),
-    //         ]);
-
-    //         // Ambil detail yang ada di database
-    //         $existingDetails = ItemTransferDetail::where('item_transfer_id', $itemTransfer->id)->get()->keyBy('id');
-
-    //         // Array untuk ID detail yang baru
-    //         $newDetailIds = collect($request->details)->pluck('id')->filter();
-
-    //         // Hapus detail yang tidak ada di request
-    //         foreach ($existingDetails as $detail) {
-    //             if (!$newDetailIds->contains($detail->id)) {
-    //                 $detail->delete(); // Hapus detail yang tidak ada di request
-    //             }
-    //         }
-
-    //         // Proses update atau insert detail
-    //         foreach ($request->details as $detail) {
-    //             // Cek apakah detail sudah ada
-    //             if (isset($detail['id'])) {
-    //                 // Update data inventory yang ada
-    //                 if ($existingDetails->has($detail['id'])) {
-    //                     $existingDetail = $existingDetails->get($detail['id']);
-    //                     $actualStockDifference = $detail['transfer_quantity'] - $existingDetail->quantity;
-
-    //                     if ($actualStockDifference > 0) {
-    //                         // Jika actual stock pada existing lebih kecil
-    //                         $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
-    //                                             ->where('warehouse_id', $request->from_warehouse_id)
-    //                                             ->first();
-
-    //                         if ($inventoryDetail) {
-    //                             $inventoryDetail->quantity += $actualStockDifference;
-    //                             $inventoryDetail->save();
-    //                         }
-    //                     } elseif ($actualStockDifference < 0) {
-    //                         // Jika actual stock pada existing lebih besar
-    //                         $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
-    //                                             ->where('warehouse_id', $request->from_warehouse_id)
-    //                                             ->first();
-
-    //                         if ($inventoryDetail) {
-    //                             $inventoryDetail->quantity += $actualStockDifference;
-    //                             $inventoryDetail->save();
-    //                         }
-    //                     }
-
-    //                     $existingDetails[$detail['id']]->update([                                                                                                             
-    //                         'quantity' => $detail['transfer_quantity'],
-    //                         'notes' => $detail['notes'] ?? '',
-    //                         'updated_by' => Auth::id(),
-    //                     ]);
-    //                 }
-    //             } else {
-
-    //                 InventoryDetail::create([
-    //                     'inventory_id'   => $detail['inventory_id'],
-    //                     'warehouse_id'   => $request->to_warehouse_id,
-    //                     'quantity'       => $detail['transfer_quantity'],
-    //                     'created_by' => Auth::id(),
-    //                 ]);
-    //                 // Jika tidak ada, buat record baru                    
-    //                 ItemTransferDetail::create([
-    //                     'item_transfer_id' => $itemTransfer->id,
-    //                     'inventory_id'   => $detail['inventory_id'],
-    //                     'quantity'       => $detail['transfer_quantity'],
-    //                     'created_by' => Auth::id(),
-    //                 ]);
-    //             }
-    //         }
-    //     });
-
-    //     return response()->json(['message' => 'Data updated successfully'], 200);
-    // }
 
     public function update(Request $request, $id)
     {
@@ -320,12 +214,12 @@ class ItemTransferController extends Controller
                 'updated_by' => Auth::id(),
             ]);
 
-            $existingDetails = ItemTransferDetail::where('item_transfer_id', $itemTransfer->id)->get()->keyBy('inventory_id');
-            $newDetailIds = collect($request->details)->pluck('id')->filter();
+            $existingDetails = ItemTransferDetail::where('item_transfer_id', $id)->get()->keyBy('inventory_id');
+            $newDetailIds = collect($request->details)->pluck('inventory_id')->filter();
 
             // Delete details that are not in the request
             foreach ($existingDetails as $detail) {
-                if (!$newDetailIds->contains($detail->id)) {
+                if (!$newDetailIds->contains($detail->inventory_id)) {
                     $detail->delete();
                 }
             }
@@ -333,25 +227,34 @@ class ItemTransferController extends Controller
             foreach ($request->details as $detail) {
                 $quantityChange = $detail['transfer_quantity'] ?? 0;
                 
-            if (isset($detail['id']) && $existingDetails->has($detail['id'])) {
-                $existingDetail = $existingDetails->get($detail['id']);
-                $actualStockDifference = $quantityChange - $existingDetail->quantity;
+            if (isset($detail['inventory_id']) && $existingDetails->has($detail['inventory_id'])) {
+                $existingDetail = $existingDetails->get($detail['inventory_id']);
+                $actualStockDifference = $existingDetail->quantity - $quantityChange;
 
                 // Update stock based on difference
                 if ($actualStockDifference !== 0) {
-                    $sourceInventoryDetail = InventoryDetail::where('inventory_id', $detail['id'])
-                        ->where('warehouse_id', $actualStockDifference > 0 ? $request->from_warehouse_id : $request->to_warehouse_id)
+                    $sourceInventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
+                        ->where('warehouse_id', $request->from_warehouse_id)
                         ->first();
 
                     if ($sourceInventoryDetail) {
                         $sourceInventoryDetail->quantity += $actualStockDifference;
                         $sourceInventoryDetail->save();
                     }
+
+                    $sourceInventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
+                        ->where('warehouse_id', $request->to_warehouse_id)
+                        ->first();
+                    
+                    if ($sourceInventoryDetail) {
+                        $sourceInventoryDetail->quantity -= $actualStockDifference;
+                        $sourceInventoryDetail->save();
+                    }
                 }
 
                 $existingDetail->update([
                     'quantity' => $quantityChange,
-                    'notes' => $detail['notes'] ?? '',
+                    // 'notes' => $detail['notes'] ?? '',
                     'updated_by' => Auth::id(),
                 ]);
             } else {
