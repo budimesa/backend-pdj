@@ -74,18 +74,56 @@ class CustomerBalanceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CustomerBalance $customerBalance)
+    public function update(Request $request, $id)
     {
+        // Validasi input
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id', // Pastikan customer ada
-            'balance_amount' => 'nullable|numeric',
+            'customer_id' => 'sometimes|required|exists:customers,id',
+            'deposit_amount' => 'sometimes|nullable|numeric',
+            'deposit_date' => 'sometimes|required|date', // Validasi deposit date
         ]);
 
-        $validated['updated_by'] = Auth::id();
+        // Temukan deposit berdasarkan ID
+        $customerBalanceDeposit = CustomerBalanceDeposit::findOrFail($id);
+        
+        // Simpan nilai deposit_amount lama
+        $oldDepositAmount = $customerBalanceDeposit->deposit_amount;
 
-        $customerBalance->update($validated);
+        // Update customer balance jika customer_id ada
+        if (isset($validated['customer_id'])) {
+            $customerBalance = CustomerBalance::where('customer_id', $validated['customer_id'])->first();
 
-        return response()->json($customerBalance, 200);
+            if ($customerBalance) {
+                // Update balance amount berdasarkan perubahan deposit_amount
+                $newDepositAmount = $validated['deposit_amount'] ?? $oldDepositAmount; // Ambil nilai baru atau tetap
+
+                // Hitung selisih dan perbarui balance_amount
+                $difference = $newDepositAmount - $oldDepositAmount;
+
+                $customerBalance->balance_amount += $difference;
+                $customerBalance->updated_by = Auth::id();
+                $customerBalance->save();
+            } else {
+                // Jika customer balance tidak ada, buat baru
+                $customerBalance = CustomerBalance::create([
+                    'customer_id' => $validated['customer_id'],
+                    'balance_amount' => $validated['deposit_amount'] ?? 0, // Jika tidak ada, gunakan 0
+                    'created_by' => Auth::id(),
+                ]);
+            }
+        }
+
+        // Update deposit record
+        if (isset($validated['deposit_amount'])) {
+            $customerBalanceDeposit->deposit_amount = $validated['deposit_amount'];
+        }
+        if (isset($validated['deposit_date'])) {
+            $customerBalanceDeposit->deposit_date = Carbon::parse($validated['deposit_date'])->toDateTimeString();
+        }
+        $customerBalanceDeposit->updated_by = Auth::id();
+        $customerBalanceDeposit->save();
+
+        return response()->json($customerBalanceDeposit, 200);
     }
 
     /**
