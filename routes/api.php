@@ -20,6 +20,7 @@ use App\Http\Controllers\CustomerBalanceController;
 use App\Http\Controllers\CustomerBalanceDepositController;
 use App\Http\Controllers\ItemTransferController;
 use App\Http\Controllers\InventoryDetailController;
+use App\Http\Controllers\RepackController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
@@ -42,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('item-transfers', ItemTransferController::class);
     Route::get('item-transfer-last-row', [ItemTransferController::class, 'getLastItem']);
     Route::apiResource('inventory-details', InventoryDetailController::class);
+    Route::apiResource('repacks', RepackController::class);
 });
 
 
