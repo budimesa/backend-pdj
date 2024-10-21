@@ -15,10 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('repack_id')->constrained('repacks')->onDelete('cascade');
             $table->foreignId('target_inventory_id')->constrained('inventories')->onDelete('cascade');
-            // $table->unsignedBigInteger('target_inventory_id')
-            // ->references('id')
-            // ->on('inventories')
-            // ->onDelete('cascade');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

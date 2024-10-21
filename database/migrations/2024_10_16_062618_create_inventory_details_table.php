@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('inventory_id')->constrained('inventories')->onDelete('cascade');
             $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');            
             $table->integer('quantity');
+            $table->tinyInteger('repack_leftover')->unsigned()->default(0);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
             $table->unsignedBigInteger('updated_by')->nullable();
