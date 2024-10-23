@@ -20,4 +20,14 @@ class InventoryDetail extends Model
     {
         return $this->belongsTo(Warehouse::class);
     }
+
+    public function targetRepacks()
+    {
+        return $this->hasMany(TargetRepack::class);
+    }
+
+    public function sourceRepacks()
+    {
+        return $this->hasMany(SourceRepack::class);
+    }
 }

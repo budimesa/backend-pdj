@@ -5,19 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Repack extends Model
+class TargetRepack extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
 
-    public function targetRepacks()
+    public function repack()
     {
-        return $this->hasMany(TargetRepack::class);
+        return $this->belongsTo(Repack::class);
     }
 
-    public function sourceRepacks()
+    public function inventoryDetail()
     {
-        return $this->hasMany(SourceRepack::class);
+        return $this->belongsTo(InventoryDetail::class);
     }
 }

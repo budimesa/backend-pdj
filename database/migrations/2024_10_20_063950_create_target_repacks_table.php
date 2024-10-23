@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('target_repacks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('repack_id')->constrained('repacks')->onDelete('cascade');
-            $table->foreignId('target_inventory_id')->constrained('inventories')->onDelete('cascade');
+            $table->foreignId('inventory_d_id')->constrained('inventory_details')->onDelete('cascade');
+            $table->integer('quantity');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

@@ -38,6 +38,7 @@ class InventoryDetailController extends Controller
             $inventory = $item->inventory;
         
             return [
+                'inventory_detail_id' => $item->id,
                 'inventory_id' => $item->inventory_id,
                 'item_id' => $inventory && $inventory->item ? $inventory->item->id : null,
                 'incoming_item_id' => $inventory && $inventory->incomingItem ? $inventory->incomingItem->id : null,

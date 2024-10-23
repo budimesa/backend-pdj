@@ -51,56 +51,45 @@ class RepackController extends Controller
                         'actual_stock' => $inventory->actual_stock - 1,
                         'updated_by' => Auth::id(),
                     ]);
+
+                    $repackInventory = createNewInventory($inventory, $request->repack_weight, 2);
+                    $leftoverRepackInventory = createNewInventory($inventory, $request->repack_leftover, 2);
+
+                    $repackDate = Carbon::parse($request->repack_date)->format('Y-m-d H:i:s');
+                    $repack = Repack::create([
+                        'repack_date' => $repackDate,
+                        'repack_type' => $request->repack_type,                                
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    $sourceRepack = SourceRepack::create([
+                        'repack_id' => $repack->id,
+                        'inventory_d_id' => $request->inventory_detail_id,
+                        'quantity' => $request->quantity,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    // Buat target repack dengan inventory detail yang baru dibuat
+                    $targetRepack1 = TargetRepack::create([
+                        'repack_id' => $repack->id,
+                        'inventory_d_id' => $repackInventory->id, // Ambil dari detail baru
+                        'quantity' => $request->quantity,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    $targetRepack2 = TargetRepack::create([
+                        'repack_id' => $repack->id,
+                        'inventory_d_id' => $leftoverRepackInventory->id, // Ambil dari detail baru
+                        'quantity' => $request->quantity,
+                        'created_by' => Auth::id(),
+                    ]);
                 } catch (\Exception $e) {
                     // Tangani kesalahan, bisa log atau return response error
                     return response()->json(['error' => 'Gagal mengupdate inventory.'], 500);
                 }
             } else {
                 return response()->json(['error' => 'Stok tidak mencukupi.'], 400);
-            }
-            $repackDate = Carbon::parse($request->repack_date)->format('Y-m-d H:i:s');
-            $repack = Repack::create([
-                'repack_date' => $repackDate,
-                'source_inventory_details' => $request->source_inventory_details,
-                'repack_type' => $request->from_warehouse_id,                                
-                'created_by' => Auth::id(),
-            ]);
-
-            // foreach ($details as $index => $detail) {
-            //     if(isset($detail['inventory_id'])) {
-            //         $existInventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
-            //             ->where('warehouse_id', $request->to_warehouse_id)
-            //             ->first();
-            //         if($existInventoryDetail) {
-            //             $existInventoryDetail->update([
-            //                 'quantity' => $existInventoryDetail->quantity + $detail['quantity'],
-            //             ]);
-            //         }
-            //         else {
-            //             InventoryDetail::create([
-            //                 'inventory_id'   => $detail['inventory_id'],
-            //                 'warehouse_id'   => $request->to_warehouse_id,
-            //                 'quantity'       => $detail['quantity'],
-            //                 'created_by' => Auth::id(),
-            //             ]);
-            //         }
-
-            //         $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
-            //             ->where('warehouse_id', $request->from_warehouse_id)
-            //             ->first();
-
-            //             $inventoryDetail->update([
-            //                 'quantity' => $inventoryDetail->quantity - $detail['quantity'],
-            //             ]);
-
-            //         ItemTransferDetail::create([
-            //             'item_transfer_id' => $itemTransfer->id,
-            //             'inventory_id'   => $detail['inventory_id'],
-            //             'quantity'       => $detail['quantity'],
-            //             'created_by' => Auth::id(),
-            //         ]);
-            //     }
-            // }
+            }            
         });
 
         return response()->json(['message' => 'Data inserted successfully'], 201);
@@ -109,6 +98,38 @@ class RepackController extends Controller
     /**
      * Display the specified resource.
      */
+
+    public function createNewInventory($inventory, $weight, $transactionType) {
+        $newInventory =  Inventory::create([
+            'incoming_item_id' => $inventory->incoming_item_id,
+            'item_id' => $inventory->item_id,
+            'batch_id' => $inventory->batch_id,
+            'description' => $inventory->description,
+            'barcode_number' => $inventory->barcode_number,
+            'gross_weight' => $weight,
+            'net_weight' => $weight,
+            'unit_price' => $inventory->unit_price,
+            'initial_stock' => 1,
+            'available_stock' => 1, // Atau sesuaikan sesuai kebutuhan
+            'actual_stock' => 1,
+            'total_price' => $inventory->total_price,
+            'labor_cost' => $inventory->labor_cost,
+            'expiry_date' => $inventory->expiry_date,
+            'notes' => $inventory->notes,
+            'transaction_type' => $transactionType,
+            'price_status' => $inventory->price_status,
+            'created_by' => Auth::id(),
+        ]);
+
+        $inventoryDetail = InventoryDetail::create([
+            'inventory_id' => $inventory->id,
+            'warehouse_id' => 1, // Gudang Sementara (Toko)
+            'quantity' => 1,   
+            'created_by' => Auth::id(),                 
+        ]);
+
+        return $inventoryDetail;
+    }
     public function show(string $id)
     {
         //
