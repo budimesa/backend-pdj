@@ -37,6 +37,73 @@ class RepackController extends Controller
             'details.*.notes' => 'nullable|string',
             'details.*.expiry_date' => 'nullable|date',
         ]);
+
+        $details = $request->input('details'); // Dapatkan details ke dalam variabel lokal
+        // Mulai transaction
+        DB::transaction(function () use ($request, $details) {
+
+            $inventory = Inventory::find($request->inventory_id);
+
+            if ($inventory && $inventory->available_stock > 0 && $inventory->actual_stock > 0) {
+                try {
+                    $inventory->update([                
+                        'available_stock' => $inventory->available_stock - 1,
+                        'actual_stock' => $inventory->actual_stock - 1,
+                        'updated_by' => Auth::id(),
+                    ]);
+                } catch (\Exception $e) {
+                    // Tangani kesalahan, bisa log atau return response error
+                    return response()->json(['error' => 'Gagal mengupdate inventory.'], 500);
+                }
+            } else {
+                return response()->json(['error' => 'Stok tidak mencukupi.'], 400);
+            }
+            $repackDate = Carbon::parse($request->repack_date)->format('Y-m-d H:i:s');
+            $repack = Repack::create([
+                'repack_date' => $repackDate,
+                'source_inventory_details' => $request->source_inventory_details,
+                'repack_type' => $request->from_warehouse_id,                                
+                'created_by' => Auth::id(),
+            ]);
+
+            // foreach ($details as $index => $detail) {
+            //     if(isset($detail['inventory_id'])) {
+            //         $existInventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
+            //             ->where('warehouse_id', $request->to_warehouse_id)
+            //             ->first();
+            //         if($existInventoryDetail) {
+            //             $existInventoryDetail->update([
+            //                 'quantity' => $existInventoryDetail->quantity + $detail['quantity'],
+            //             ]);
+            //         }
+            //         else {
+            //             InventoryDetail::create([
+            //                 'inventory_id'   => $detail['inventory_id'],
+            //                 'warehouse_id'   => $request->to_warehouse_id,
+            //                 'quantity'       => $detail['quantity'],
+            //                 'created_by' => Auth::id(),
+            //             ]);
+            //         }
+
+            //         $inventoryDetail = InventoryDetail::where('inventory_id', $detail['inventory_id'])
+            //             ->where('warehouse_id', $request->from_warehouse_id)
+            //             ->first();
+
+            //             $inventoryDetail->update([
+            //                 'quantity' => $inventoryDetail->quantity - $detail['quantity'],
+            //             ]);
+
+            //         ItemTransferDetail::create([
+            //             'item_transfer_id' => $itemTransfer->id,
+            //             'inventory_id'   => $detail['inventory_id'],
+            //             'quantity'       => $detail['quantity'],
+            //             'created_by' => Auth::id(),
+            //         ]);
+            //     }
+            // }
+        });
+
+        return response()->json(['message' => 'Data inserted successfully'], 201);
     }
 
     /**

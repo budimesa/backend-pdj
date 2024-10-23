@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('repack_details', function (Blueprint $table) {
+        Schema::create('target_repacks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('repack_id')->constrained('repacks')->onDelete('cascade');
             $table->foreignId('target_inventory_id')->constrained('inventories')->onDelete('cascade');
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('repack_details');
+        Schema::dropIfExists('target_repacks');
     }
 };

@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('repacks', function (Blueprint $table) {
+        Schema::create('source_repacks', function (Blueprint $table) {
             $table->id();
-            $table->date('repack_date');
-            $table->tinyInteger('repack_type')->unsigned()->default(1);
+            $table->foreignId('repack_id')->constrained('repacks')->onDelete('cascade');
+            $table->foreignId('source_inventory_id')->constrained('inventories')->onDelete('cascade');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('repacks');
+        Schema::dropIfExists('source_repacks');
     }
 };
